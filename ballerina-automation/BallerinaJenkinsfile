@@ -67,6 +67,7 @@ def updateProperties(String repositoryName, String credentials, String settingsX
         dir(repositoryName) {
             sh "mvn -s $MAVEN_SETTINGS versions:update-properties -Dincludes=${propertiesList}"
             boolean changesPresent = sh("git diff-index --quiet HEAD");
+            sh("echo ${changesPresent}")
             if (changesPresent) {
                 sh("git add -u")
                 sh("git commit -m '${commitMessage}'")
