@@ -16,19 +16,6 @@ node {
         String toolsDistributionRepository = "tools-distribution-temp";
         String toolSwaggerBallerinaRepository = "tool-swagger-ballerina-temp";
         String ballerinaGroudId = "org.ballerinalang";
-        String ballerinaCoreAritfactId = "ballerina-core";
-        String ballerinaLauncherArtifactId = "ballerina-launcher";
-        String ballerinaNativeArtifactId = "ballerina-native";
-        String annotationProcessorArtifactId = "annotation-processor";
-        String ballerinaArtifactId = "ballerina";
-        String workSpaceServiceArtifactId = "workspace-service";
-        String ballerinaComposerWebArtifactId = "ballerina-composer-web";
-        String testerinaCoreArtifactId = "testerina-core";
-        String containerSupportArtifactId = "ballerina-container-support";
-        String docerinaArtifactId = "docerina";
-        String connectorsArtifactId = "connectors";
-        String swaggerBallerinaGenArtifactId = "swagger-ballerina-generator";
-
 
         stage('Building ballerina') {
             cloneRepository(ballerinaRepository, user, gitCredentialsID);
@@ -41,38 +28,35 @@ node {
                 cloneRepository(docerinaRepository, user, gitCredentialsID);
 
                 updateProperties(docerinaRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
-                        "${ballerinaGroudId}:${ballerinaCoreAritfactId},${ballerinaGroudId}:${ballerinaLauncherArtifactId}");
+                        "${ballerinaGroudId}:*");
 
                 release(settingsXMLID, docerinaRepository)
             }, testerinaRelease: {
                 cloneRepository(testerinaRepository, user, gitCredentialsID);
 
                 updateProperties(testerinaRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
-                        "${ballerinaGroudId}:${ballerinaCoreAritfactId},${ballerinaGroudId}:${ballerinaLauncherArtifactId}," +
-                                "${ballerinaGroudId}:${ballerinaNativeArtifactId}," +
-                                "${ballerinaGroudId}:${annotationProcessorArtifactId}");
+                        "${ballerinaGroudId}:*");
 
                 release(settingsXMLID, testerinaRepository)
             }, connectorsRelease: {
                 cloneRepository(connectorsRepository, user, gitCredentialsID);
 
                 updateProperties(connectorsRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
-                        "${ballerinaGroudId}:${ballerinaCoreAritfactId},${ballerinaGroudId}:${ballerinaNativeArtifactId}," +
-                                "${ballerinaGroudId}:${annotationProcessorArtifactId}");
+                        "${ballerinaGroudId}:*");
 
                 release(settingsXMLID, connectorsRepository)
             }, containerSupportRelease: {
                 cloneRepository(containerSupportRepository, user, gitCredentialsID);
 
                 updateProperties(containerSupportRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
-                        "${ballerinaGroudId}:${ballerinaLauncherArtifactId}");
+                        "${ballerinaGroudId}:*");
 
                 release(settingsXMLID, containerSupportRepository)
             }, toolSwaggerBallerinaRelease: {
                 cloneRepository(toolSwaggerBallerinaRepository, user, gitCredentialsID);
 
                 updateProperties(toolSwaggerBallerinaRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
-                        "${ballerinaGroudId}:${ballerinaLauncherArtifactId}");
+                        "${ballerinaGroudId}:*");
 
                 release(settingsXMLID, toolSwaggerBallerinaRepository)
             }, failFast: true
@@ -82,9 +66,7 @@ node {
             cloneRepository(toolsDistributionRepository, user, gitCredentialsID);
 
             updateProperties(toolsDistributionRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
-            "${ballerinaGroudId}:${ballerinaArtifactId},${ballerinaGroudId}:${workSpaceServiceArtifactId},${ballerinaGroudId}:${ballerinaComposerWebArtifactId}," +
-                    "${ballerinaGroudId}:${testerinaCoreArtifactId},${ballerinaGroudId}:${containerSupportArtifactId},${ballerinaGroudId}:${docerinaArtifactId}" +
-                    "${ballerinaGroudId}:${connectorsArtifactId},${ballerinaGroudId}:${swaggerBallerinaGenArtifactId}");
+            "${ballerinaGroudId}:*");
 
             release(settingsXMLID, toolsDistributionRepository);
         }
