@@ -69,7 +69,7 @@ def updateProperties(String repositoryName, String credentials, String settingsX
             boolean changesPresent = sh (
                     script: "git diff-index --quiet HEAD",
                     returnStatus: true
-            ) == 0
+            ) == 1
             if (changesPresent) {
                 sh("git add -u")
                 sh("git commit -m '${commitMessage}'")
