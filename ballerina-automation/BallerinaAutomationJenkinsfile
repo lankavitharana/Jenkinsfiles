@@ -61,10 +61,10 @@ node {
                                 "${ballerinaGroudId}:${annotationProcessorArtifactId}");
 
                 release(settingsXMLID, connectorsRepository)
-            }, conrainerSupportRelease: {
+            }, containerSupportRelease: {
                 cloneRepository(containerSupportRepository, user, gitCredentialsID);
 
-                updateProperties(connectorsRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
+                updateProperties(containerSupportRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
                         "${ballerinaGroudId}:${ballerinaLauncherArtifactId}");
 
                 release(settingsXMLID, containerSupportRepository)
