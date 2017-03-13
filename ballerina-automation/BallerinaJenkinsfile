@@ -86,7 +86,7 @@ def updateProperties(String repositoryName, String credentials, String settingsX
 def release(String settingsXml, String repositoryDir) {
     configFileProvider(
             [configFile(fileId: settingsXml, variable: 'MAVEN_SETTINGS')]) {
-        dir(repositoryDir) { sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -B -Darguments="-Dmaven.deploy.skip=true"' }
+        dir(repositoryDir) { sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -B -Darguments="-Dmaven.deploy.skip=true -DskipTests=true"' }
     }
 }
 
