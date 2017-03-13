@@ -1,0 +1,148 @@
+#!groovy
+node {
+    try {
+        env.PATH = "${tool 'apache-maven-3.2.2'}/bin:${env.PATH}"
+        env.JAVA_HOME="${tool 'Oracle-JDK-1.8.0_45'}"
+        env.PATH="${env.JAVA_HOME}/bin:${env.PATH}"
+
+        String settingsXMLID = "adb07180-fa9c-4bea-94c4-130813b8018c-manuri";
+        String gitCredentialsID = "manuri-pipeline-git";
+        String user = "manuri";
+        String ballerinaRepository = "ballerina-temp";
+        String docerinaRepository = "docerina-temp";
+        String testerinaRepository = "testerina-temp";
+        String connectorsRepository = "connectors-temp";
+        String containerSupportRepository = "container-support-temp";
+        String toolsDistributionRepository = "tools-distribution-temp";
+        String toolSwaggerBallerinaRepository = "tool-swagger-ballerina-temp";
+        String ballerinaGroudId = "org.ballerinalang";
+        String ballerinaCoreAritfactId = "ballerina-core";
+        String ballerinaLauncherArtifactId = "ballerina-launcher";
+        String ballerinaNativeArtifactId = "ballerina-native";
+        String annotationProcessorArtifactId = "annotation-processor";
+        String ballerinaArtifactId = "ballerina";
+        String workSpaceServiceArtifactId = "workspace-service";
+        String ballerinaComposerWebArtifactId = "ballerina-composer-web";
+        String testerinaCoreArtifactId = "testerina-core";
+        String containerSupportArtifactId = "ballerina-container-support";
+        String docerinaArtifactId = "docerina";
+        String connectorsArtifactId = "connectors";
+        String swaggerBallerinaGenArtifactId = "swagger-ballerina-generator";
+
+
+        stage('Building ballerina') {
+            cloneRepository(ballerinaRepository, user, gitCredentialsID);
+
+            release(settingsXMLID, ballerinaRepository);
+        }
+
+        stage('Building docerina, testerina, connectors, container-support') {
+            parallel docerinaRelease: {
+                cloneRepository(docerinaRepository, user, gitCredentialsID);
+
+                updateProperties(docerinaRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
+                        "${ballerinaGroudId}:${ballerinaCoreAritfactId},${ballerinaGroudId}:${ballerinaLauncherArtifactId}");
+
+                release(settingsXMLID, docerinaRepository)
+            }, testerinaRelease: {
+                cloneRepository(testerinaRepository, user, gitCredentialsID);
+
+                updateProperties(testerinaRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
+                        "${ballerinaGroudId}:${ballerinaCoreAritfactId},${ballerinaGroudId}:${ballerinaLauncherArtifactId}," +
+                                "${ballerinaGroudId}:${ballerinaNativeArtifactId}," +
+                                "${ballerinaGroudId}:${annotationProcessorArtifactId}");
+
+                release(settingsXMLID, testerinaRepository)
+            }, connectorsRelease: {
+                cloneRepository(connectorsRepository, user, gitCredentialsID);
+
+                updateProperties(connectorsRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
+                        "${ballerinaGroudId}:${ballerinaCoreAritfactId},${ballerinaGroudId}:${ballerinaNativeArtifactId}," +
+                                "${ballerinaGroudId}:${annotationProcessorArtifactId}");
+
+                release(settingsXMLID, connectorsRepository)
+            }, conrainerSupportRelease: {
+                cloneRepository(containerSupportRepository, user, gitCredentialsID);
+
+                updateProperties(connectorsRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
+                        "${ballerinaGroudId}:${ballerinaLauncherArtifactId}");
+
+                release(settingsXMLID, containerSupportRepository)
+            }, toolSwaggerBallerinaRelease: {
+                cloneRepository(toolSwaggerBallerinaRepository, user, gitCredentialsID);
+
+                updateProperties(toolSwaggerBallerinaRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
+                        "${ballerinaGroudId}:${ballerinaLauncherArtifactId}");
+
+                release(settingsXMLID, toolSwaggerBallerinaRepository)
+            }, failFast: true
+        }
+
+        stage('Building tools-distribution') {
+            cloneRepository(toolsDistributionRepository, user, gitCredentialsID);
+
+            updateProperties(toolsDistributionRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
+            "${ballerinaGroudId}:${ballerinaArtifactId},${ballerinaGroudId}:${workSpaceServiceArtifactId},${ballerinaGroudId}:${ballerinaComposerWebArtifactId}," +
+                    "${ballerinaGroudId}:${testerinaCoreArtifactId},${ballerinaGroudId}:${containerSupportArtifactId},${ballerinaGroudId}:${docerinaArtifactId}" +
+                    "${ballerinaGroudId}:${connectorsArtifactId},${ballerinaGroudId}:${swaggerBallerinaGenArtifactId}");
+
+            release(settingsXMLID, toolsDistributionRepository);
+        }
+    } finally {
+        stage('Clean Up') {
+            deleteDir();
+        }
+    }
+}
+
+def cloneRepository(String repositoryName, String user, String credentials) {
+    checkout([
+            $class: 'GitSCM',
+            branches: [[name: '*/master']],
+            doGenerateSubmoduleConfigurations: false,
+            extensions: [[$class: 'LocalBranch', localBranch: 'master'],
+                         [$class: 'RelativeTargetDirectory', relativeTargetDir: repositoryName]],
+            submoduleCfg: [],
+            userRemoteConfigs:
+                    [[credentialsId: credentials,
+                      url: "http://github.com/${user}/${repositoryName}.git"]]])
+}
+
+def updateProperties(String repositoryName, String credentials, String settingsXml, String user, String commitMessage, String propertiesList) {
+    configFileProvider(
+            [configFile(fileId: settingsXml, variable: 'MAVEN_SETTINGS')]) {
+        dir(repositoryName) {
+            sh "mvn -s $MAVEN_SETTINGS versions:update-properties -Dincludes=${propertiesList}"
+            boolean changesPresent = sh (
+                    script: "git diff-index --quiet HEAD",
+                    returnStatus: true
+            ) == 1
+            if (changesPresent) {
+                sh("git add -u")
+                sh("git commit -m '${commitMessage}'")
+                withCredentials(
+                        [[$class          : 'UsernamePasswordMultiBinding',
+                          credentialsId   : credentials,
+                          usernameVariable: 'GIT_USERNAME',
+                          passwordVariable: 'GIT_PASSWORD']]) {
+                    sh("git remote set-url origin https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${user}/${repositoryName}.git")
+                    sh("git push origin HEAD:master")
+                }
+            }
+        }
+    }
+}
+
+def release(String settingsXml, String repositoryDir) {
+    configFileProvider(
+            [configFile(fileId: settingsXml, variable: 'MAVEN_SETTINGS')]) {
+        dir(repositoryDir) { sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -B -Darguments="-Dmaven.deploy.skip=true -DskipTests=true"' }
+    }
+}
+
+
+
+
+
+
+
