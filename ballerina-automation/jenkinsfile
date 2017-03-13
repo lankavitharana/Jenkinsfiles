@@ -1,0 +1,81 @@
+
+node {
+    try {
+        env.PATH = "${tool 'apache-maven-3.2.2'}/bin:${env.PATH}"
+
+        String settingsXMLID = "adb07180-fa9c-4bea-94c4-130813b8018c-manuri";
+        String gitCredentialsID = "manuri-pipeline-git";
+        String user = "manuri";
+
+
+        stage('Build Common Dependency') {
+            cloneRepository("ballerina-automation-test-1", user, gitCredentialsID);
+
+            release(settingsXMLID, "ballerina-automation-test-1");
+        }
+
+        stage('Build Dependent Repositories') {
+            parallel repo1: {
+                cloneRepository("ballerina-automation-test-2", user, gitCredentialsID);
+
+                updateProperties("ballerina-automation-test-2", gitCredentialsID, settingsXMLID, user, "Updating properties", "org.ballerinalang:test1");
+
+                release(settingsXMLID, "ballerina-automation-test-2")
+            }, repo2: {
+                cloneRepository("ballerina-automation-test-3", user, gitCredentialsID);
+
+                updateProperties("ballerina-automation-test-3", gitCredentialsID, settingsXMLID, user, "Updating properties", "org.ballerinalang:test1");
+
+                release(settingsXMLID, "ballerina-automation-test-3")
+            }, failFast: true
+        }
+    } finally {
+        stage('Clean Up') {
+            deleteDir();
+        }
+    }
+}
+
+def cloneRepository(String repositoryName, String user, String credentials) {
+    checkout([
+            $class: 'GitSCM',
+            branches: [[name: '*/master']],
+            doGenerateSubmoduleConfigurations: false,
+            extensions: [[$class: 'LocalBranch', localBranch: 'master'],
+                         [$class: 'RelativeTargetDirectory', relativeTargetDir: repositoryName]],
+            submoduleCfg: [],
+            userRemoteConfigs:
+                    [[credentialsId: credentials,
+                      url: "http://github.com/${user}/${repositoryName}.git"]]])
+}
+
+def updateProperties(String repositoryName, String credentials, String settingsXml, String user, String commitMessage, String propertiesList) {
+    configFileProvider(
+            [configFile(fileId: settingsXml, variable: 'MAVEN_SETTINGS')]) {
+        dir(repositoryName) {
+            sh "mvn -s $MAVEN_SETTINGS versions:update-properties -Dincludes=${propertiesList}"
+            sh("git add -u")
+            sh("git commit -m '${commitMessage}'")
+            withCredentials(
+                    [[$class: 'UsernamePasswordMultiBinding',
+                      credentialsId: credentials,
+                      usernameVariable: 'GIT_USERNAME',
+                      passwordVariable: 'GIT_PASSWORD']]) {
+                sh("git remote set-url origin https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${user}/${repositoryName}.git")
+                sh("git push origin HEAD:master")
+            }
+        }
+    }
+}
+
+def release(String settingsXml, String repositoryDir) {
+    configFileProvider(
+            [configFile(fileId: settingsXml, variable: 'MAVEN_SETTINGS')]) {
+        dir(repositoryDir) { sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -B' }
+    }
+}
+
+
+
+
+
