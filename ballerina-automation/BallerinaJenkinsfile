@@ -66,15 +66,18 @@ def updateProperties(String repositoryName, String credentials, String settingsX
             [configFile(fileId: settingsXml, variable: 'MAVEN_SETTINGS')]) {
         dir(repositoryName) {
             sh "mvn -s $MAVEN_SETTINGS versions:update-properties -Dincludes=${propertiesList}"
-            sh("git add -u")
-            sh("git commit -m '${commitMessage}'")
-            withCredentials(
-                    [[$class: 'UsernamePasswordMultiBinding',
-                      credentialsId: credentials,
-                      usernameVariable: 'GIT_USERNAME',
-                      passwordVariable: 'GIT_PASSWORD']]) {
-                sh("git remote set-url origin https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${user}/${repositoryName}.git")
-                sh("git push origin HEAD:master")
+            boolean changesPresent = sh("git diff-index --quiet HEAD");
+            if (changesPresent) {
+                sh("git add -u")
+                sh("git commit -m '${commitMessage}'")
+                withCredentials(
+                        [[$class          : 'UsernamePasswordMultiBinding',
+                          credentialsId   : credentials,
+                          usernameVariable: 'GIT_USERNAME',
+                          passwordVariable: 'GIT_PASSWORD']]) {
+                    sh("git remote set-url origin https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${user}/${repositoryName}.git")
+                    sh("git push origin HEAD:master")
+                }
             }
         }
     }
