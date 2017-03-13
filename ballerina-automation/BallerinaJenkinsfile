@@ -2,7 +2,8 @@
 node {
     try {
         env.PATH = "${tool 'apache-maven-3.2.2'}/bin:${env.PATH}"
-        env.PATH = "${tool 'Oracle-JDK-1.8.0_45'}/bin:${env.PATH}"
+        env.JAVA_HOME="${tool 'Oracle-JDK-1.8.0_45'}"
+        env.PATH="${env.JAVA_HOME}/bin:${env.PATH}"
 
         String settingsXMLID = "adb07180-fa9c-4bea-94c4-130813b8018c-manuri";
         String gitCredentialsID = "manuri-pipeline-git";
@@ -31,6 +32,13 @@ node {
                         "org.ballerinalang:ballerina-native,org.ballerinalang:annotation-processor");
 
                 release(settingsXMLID, "testerina-temp")
+            }, repo3: {
+                cloneRepository("connectors-temp", user, gitCredentialsID);
+
+                updateProperties("connectors-temp", gitCredentialsID, settingsXMLID, user, "Updating properties",
+                        "org.ballerinalang:ballerina-core,org.ballerinalang:ballerina-native,org.ballerinalang:annotation-processor");
+
+                release(settingsXMLID, "connectors-temp")
             }, failFast: true
         }
     } finally {
