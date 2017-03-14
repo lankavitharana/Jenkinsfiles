@@ -20,7 +20,7 @@ node {
 
         stage('Building ballerina') {
             cloneRepository(ballerinaRepository, user, gitCredentialsID);
-            release(settingsXMLID, ballerinaRepository, tagMap);
+            release(settingsXMLID, ballerinaRepository);
             //releaseWithFailureRecovery(settingsXMLID, ballerinaRepository, user);
         }
 
