@@ -20,7 +20,9 @@ node {
         stage('Building ballerina') {
             cloneRepository(ballerinaRepository, user, gitCredentialsID);
 
-            release(settingsXMLID, ballerinaRepository);
+            if (needARelease(ballerinaRepository)) {
+                release(settingsXMLID, ballerinaRepository);
+            }
         }
 
         stage('Building docerina, testerina, connectors, container-support') {
@@ -30,35 +32,45 @@ node {
                 updateProperties(docerinaRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
                         "${ballerinaGroudId}:*");
 
-                release(settingsXMLID, docerinaRepository)
+                if (needARelease(docerinaRepository)) {
+                    release(settingsXMLID, docerinaRepository)
+                }
             }, testerinaRelease: {
                 cloneRepository(testerinaRepository, user, gitCredentialsID);
 
                 updateProperties(testerinaRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
                         "${ballerinaGroudId}:*");
 
-                release(settingsXMLID, testerinaRepository)
+                if (needARelease(testerinaRepository)) {
+                    release(settingsXMLID, testerinaRepository)
+                }
             }, connectorsRelease: {
                 cloneRepository(connectorsRepository, user, gitCredentialsID);
 
                 updateProperties(connectorsRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
                         "${ballerinaGroudId}:*");
 
-                release(settingsXMLID, connectorsRepository)
+                if (needARelease(connectorsRepository)) {
+                    release(settingsXMLID, connectorsRepository)
+                }
             }, containerSupportRelease: {
                 cloneRepository(containerSupportRepository, user, gitCredentialsID);
 
                 updateProperties(containerSupportRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
                         "${ballerinaGroudId}:*");
 
-                release(settingsXMLID, containerSupportRepository)
+                if (needARelease(containerSupportRepository)) {
+                    release(settingsXMLID, containerSupportRepository)
+                }
             }, toolSwaggerBallerinaRelease: {
                 cloneRepository(toolSwaggerBallerinaRepository, user, gitCredentialsID);
 
                 updateProperties(toolSwaggerBallerinaRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
                         "${ballerinaGroudId}:*");
 
-                release(settingsXMLID, toolSwaggerBallerinaRepository)
+                if (needARelease(toolSwaggerBallerinaRepository)) {
+                    release(settingsXMLID, toolSwaggerBallerinaRepository)
+                }
             }, failFast: true
         }
 
@@ -68,7 +80,9 @@ node {
             updateProperties(toolsDistributionRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
             "${ballerinaGroudId}:*");
 
-            release(settingsXMLID, toolsDistributionRepository);
+            if (needARelease(toolsDistributionRepository)) {
+                release(settingsXMLID, toolsDistributionRepository);
+            }
         }
     } finally {
         stage('Clean Up') {
@@ -119,6 +133,15 @@ def release(String settingsXml, String repositoryDir) {
     configFileProvider(
             [configFile(fileId: settingsXml, variable: 'MAVEN_SETTINGS')]) {
         dir(repositoryDir) { sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -B -Darguments="-Dmaven.deploy.skip=true -DskipTests=true"' }
+    }
+}
+
+def boolean needARelease(String repositoryDir) {
+    dir(repositoryDir) {
+        return sh(
+                script: "git log \$(git describe --abbrev=0)..HEAD --pretty=oneline | wc -l",
+                returnStdout: true
+        ) > 1;
     }
 }
 
