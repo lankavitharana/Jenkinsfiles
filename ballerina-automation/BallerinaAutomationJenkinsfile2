@@ -20,7 +20,8 @@ node {
         stage('Building ballerina') {
             cloneRepository(ballerinaRepository, user, gitCredentialsID);
 
-            release(settingsXMLID, ballerinaRepository);
+            //release(settingsXMLID, ballerinaRepository);
+            releaseWithFailureRecovery(settingsXMLID, ballerinaRepository, user);
         }
 
         stage('Building docerina, testerina, connectors, container-support') {
@@ -30,35 +31,40 @@ node {
                 updateProperties(docerinaRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
                         "${ballerinaGroudId}:*");
 
-                release(settingsXMLID, docerinaRepository)
+               // release(settingsXMLID, docerinaRepository)
+                releaseWithFailureRecovery(settingsXMLID, docerinaRepository, user);
             }, testerinaRelease: {
                 cloneRepository(testerinaRepository, user, gitCredentialsID);
 
                 updateProperties(testerinaRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
                         "${ballerinaGroudId}:*");
 
-                release(settingsXMLID, testerinaRepository)
+                //release(settingsXMLID, testerinaRepository)
+                releaseWithFailureRecovery(settingsXMLID, testerinaRepository, user);
             }, connectorsRelease: {
                 cloneRepository(connectorsRepository, user, gitCredentialsID);
 
                 updateProperties(connectorsRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
                         "${ballerinaGroudId}:*");
 
-                release(settingsXMLID, connectorsRepository)
+                //release(settingsXMLID, connectorsRepository)
+                releaseWithFailureRecovery(settingsXMLID, connectorsRepository, user);
             }, containerSupportRelease: {
                 cloneRepository(containerSupportRepository, user, gitCredentialsID);
 
                 updateProperties(containerSupportRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
                         "${ballerinaGroudId}:*");
 
-                release(settingsXMLID, containerSupportRepository)
+                //release(settingsXMLID, containerSupportRepository)
+                releaseWithFailureRecovery(settingsXMLID, containerSupportRepository, user);
             }, toolSwaggerBallerinaRelease: {
                 cloneRepository(toolSwaggerBallerinaRepository, user, gitCredentialsID);
 
                 updateProperties(toolSwaggerBallerinaRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
                         "${ballerinaGroudId}:*");
 
-                release(settingsXMLID, toolSwaggerBallerinaRepository)
+                //release(settingsXMLID, toolSwaggerBallerinaRepository)
+                releaseWithFailureRecovery(settingsXMLID, toolSwaggerBallerinaRepository, user);
             }, failFast: true
         }
 
@@ -68,7 +74,8 @@ node {
             updateProperties(toolsDistributionRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
                     "${ballerinaGroudId}:*");
 
-            release(settingsXMLID, toolsDistributionRepository);
+            //release(settingsXMLID, toolsDistributionRepository);
+            releaseWithFailureRecovery(settingsXMLID, toolsDistributionRepository, user);
         }
     } finally {
         stage('Clean Up') {
@@ -101,15 +108,16 @@ def updateProperties(String repositoryName, String credentials, String settingsX
             ) == 1
             if (changesPresent) {
                 sh("git add -u")
-                sh("git commit -m '${commitMessage}'")
-                withCredentials(
+                sh("git commit -m '${commitMessage}'");
+                //This is not needed because at the release prepare commit is pushed anyways
+                /*withCredentials(
                         [[$class          : 'UsernamePasswordMultiBinding',
                           credentialsId   : credentials,
                           usernameVariable: 'GIT_USERNAME',
                           passwordVariable: 'GIT_PASSWORD']]) {
                     sh("git remote set-url origin https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${user}/${repositoryName}.git")
                     sh("git push origin HEAD:master")
-                }
+                }*/
             }
         }
     }
@@ -119,6 +127,45 @@ def release(String settingsXml, String repositoryDir) {
     configFileProvider(
             [configFile(fileId: settingsXml, variable: 'MAVEN_SETTINGS')]) {
         dir(repositoryDir) { sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -B -Darguments="-Dmaven.deploy.skip=true -DskipTests=true"' }
+    }
+}
+
+def releaseWithFailureRecovery(String settingsXMLID, String repositoryName, String user) {
+    String latestTagBeforeRelease = getLatestGitTag(repositoryName);
+    try {
+        release(settingsXMLID, repositoryName)
+    } catch (Exception e) {
+        String latestTagAfterRelease = getLatestGitTag(repositoryName);
+        if (!latestTagBeforeRelease.equals(latestTagAfterRelease)) {
+            dir(repositoryName) {
+                withCredentials(
+                        [[$class          : 'UsernamePasswordMultiBinding',
+                          credentialsId   : credentials,
+                          usernameVariable: 'GIT_USERNAME',
+                          passwordVariable: 'GIT_PASSWORD']]) {
+                    sh("git remote set-url origin https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${user}/${repositoryName}.git")
+                    sh(
+                            script: "git push --delete origin ${latestTagAfterRelease}",
+                            returnStatus: true
+                    )
+                    sh(
+                            script: "git push --delete origin release",
+                            returnStatus: true
+                    )
+                }
+            }
+        }
+        throw e;
+    }
+}
+
+def String getLatestGitTag (String repositoryDir) {
+    dir(repositoryDir) {
+        String latestTag = sh (
+                script: "git describe --abbrev=0",
+                returnStdout: true
+        );
+        return latestTag;
     }
 }
 
