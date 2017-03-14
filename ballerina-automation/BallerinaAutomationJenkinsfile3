@@ -93,9 +93,11 @@ node {
         }
     } catch (Exception e){
         sh "echo 'An exception has occurred in one of the builds'";
-        tagMap.each { repository, latestTagBeforeRelease ->
+        /*tagMap.each { repository, latestTagBeforeRelease ->
             cleanupRepositoryAfterFailure(repository.toString(), user, latestTagBeforeRelease.toString());
-        }
+        }*/
+        iterateTagMap(tagMap, user)
+
     } finally {
         stage('Clean Up') {
             try {
@@ -197,6 +199,13 @@ def String getLatestGitTag (String repositoryDir) {
             sh "echo 'No tags available'";
             return null;
         }
+    }
+}
+
+@NonCPS
+def iterateTagMap(tagMap, String user) {
+    for (Map.Entry<String, String> entry : tagMap) {
+        cleanupRepositoryAfterFailure(entry.key, user, entry.value)
     }
 }
 
