@@ -21,6 +21,7 @@ node {
         stage('Building ballerina') {
             cloneRepository(ballerinaRepository, user, gitCredentialsID);
             release(settingsXMLID, ballerinaRepository);
+            tagMap.put(ballerinaRepository, getLatestGitTag(ballerinaRepository));
             //releaseWithFailureRecovery(settingsXMLID, ballerinaRepository, user);
         }
 
@@ -91,7 +92,7 @@ node {
             //releaseWithFailureRecovery(settingsXMLID, toolsDistributionRepository, user);
         }
     } catch (Exception e){
-        sh "An exception has occurred in one of the builds";
+        sh "echo 'An exception has occurred in one of the builds'";
         map.each { repository, latestTagBeforeRelease ->
             cleanupRepositoryAfterFailure(repository, user, latestTagBeforeRelease);
         }
@@ -100,7 +101,8 @@ node {
             try {
                 deleteDir();
             } catch (Exception e) {
-                println("Unable to delete directory. Please manually delete")
+                sh("echo 'Unable to delete directory. Please manually delete'");
+                //println("Unable to delete directory. Please manually delete")
             }
         }
     }
@@ -144,10 +146,10 @@ def release(String settingsXml, String repositoryDir) {
 }
 
 def cleanupRepositoryAfterFailure(String repositoryName, String user, String latestTagBeforeRelease) {
-    sh "Failure has occurred in ${repositoryName} build.";
-    sh "Latest tag before release ${latestTagBeforeRelease}";
+    sh "echo 'Failure has occurred in ${repositoryName} build.'";
+    sh "echo 'Latest tag before release ${latestTagBeforeRelease}'";
     String latestTagAfterRelease = getLatestGitTag(repositoryName);
-    sh "Latest tag after release ${latestTagAfterRelease}";
+    sh "echo 'Latest tag after release ${latestTagAfterRelease}'";
     dir(repositoryName) {
         withCredentials(
                 [[$class          : 'UsernamePasswordMultiBinding',
@@ -156,13 +158,13 @@ def cleanupRepositoryAfterFailure(String repositoryName, String user, String lat
                   passwordVariable: 'GIT_PASSWORD']]) {
             sh("git remote set-url origin https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${user}/${repositoryName}.git")
             if (latestTagAfterRelease != null && !latestTagAfterRelease.equals(latestTagBeforeRelease)) {
-                sh "Deleting tag ${latestTagAfterRelease} in ${repositoryName}";
+                sh "echo 'Deleting tag ${latestTagAfterRelease} in ${repositoryName}'";
                 sh(
                         script: "git push --delete origin ${latestTagAfterRelease}",
                         returnStatus: true
                 );
             }
-            sh "Deleting release branch of ${repositoryName}";
+            sh "echo 'Deleting release branch of ${repositoryName}'";
             sh(
                     script: "git push --delete origin release",
                     returnStatus: true
@@ -172,7 +174,7 @@ def cleanupRepositoryAfterFailure(String repositoryName, String user, String lat
 }
 
 def String getLatestGitTag (String repositoryDir) {
-    sh "Inside getLatestGitTag: ${repositoryDir}";
+    sh "echo 'Inside getLatestGitTag: ${repositoryDir}'";
     dir(repositoryDir) {
         String availableTags = sh (
                 script: "git tag",
@@ -183,10 +185,10 @@ def String getLatestGitTag (String repositoryDir) {
                     script: "git describe --abbrev=0",
                     returnStdout: true
             );
-            sh "Latest tag: ${latestTag}";
+            sh "echo 'Latest tag: ${latestTag}'";
             return latestTag.trim();
         } else {
-            sh "No tags available";
+            sh "echo 'No tags available'";
             return null;
         }
     }
