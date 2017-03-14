@@ -78,9 +78,13 @@ node {
             releaseWithFailureRecovery(settingsXMLID, toolsDistributionRepository, user);
         }
     } finally {
-        /*stage('Clean Up') {
-            deleteDir();
-        }*/
+        stage('Clean Up') {
+            try {
+                deleteDir();
+            } catch (Exception e) {
+                println("Unable to delete directory. Please manually delete")
+            }
+        }
     }
 }
 
