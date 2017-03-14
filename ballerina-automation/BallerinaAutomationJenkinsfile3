@@ -18,12 +18,12 @@ node {
         String toolSwaggerBallerinaRepository = "tool-swagger-ballerina-temp";
         String ballerinaGroudId = "org.ballerinalang";
 
-        stage('Building ballerina') {
+       /* stage('Building ballerina') {
             cloneRepository(ballerinaRepository, user, gitCredentialsID);
             release(settingsXMLID, ballerinaRepository);
             tagMap.put(ballerinaRepository, getLatestGitTag(ballerinaRepository));
             //releaseWithFailureRecovery(settingsXMLID, ballerinaRepository, user);
-        }
+        }*/
 
         stage('Building docerina, testerina, connectors, container-support') {
             parallel docerinaRelease: {
@@ -93,8 +93,8 @@ node {
         }
     } catch (Exception e){
         sh "echo 'An exception has occurred in one of the builds'";
-        map.each { repository, latestTagBeforeRelease ->
-            cleanupRepositoryAfterFailure(repository, user, latestTagBeforeRelease);
+        tagMap.each { repository, latestTagBeforeRelease ->
+            cleanupRepositoryAfterFailure(repository.toString(), user, latestTagBeforeRelease.toString());
         }
     } finally {
         stage('Clean Up') {
