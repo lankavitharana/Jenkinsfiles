@@ -1,4 +1,5 @@
 #!groovy
+//This script works once removing the needARelease
 node {
     try {
         env.PATH = "${tool 'apache-maven-3.2.2'}/bin:${env.PATH}"

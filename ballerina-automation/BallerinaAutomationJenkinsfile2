@@ -78,9 +78,9 @@ node {
             releaseWithFailureRecovery(settingsXMLID, toolsDistributionRepository, user);
         }
     } finally {
-        stage('Clean Up') {
+        /*stage('Clean Up') {
             deleteDir();
-        }
+        }*/
     }
 }
 
@@ -136,6 +136,7 @@ def releaseWithFailureRecovery(String settingsXMLID, String repositoryName, Stri
         release(settingsXMLID, repositoryName)
     } catch (Exception e) {
         String latestTagAfterRelease = getLatestGitTag(repositoryName);
+       // sh "echo latest tag after release: ${latestTagAfterRelease}";
         if (!latestTagBeforeRelease.equals(latestTagAfterRelease)) {
             dir(repositoryName) {
                 withCredentials(
