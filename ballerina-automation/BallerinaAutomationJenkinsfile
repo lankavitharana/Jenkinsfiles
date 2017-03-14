@@ -138,10 +138,11 @@ def release(String settingsXml, String repositoryDir) {
 
 def boolean needARelease(String repositoryDir) {
     dir(repositoryDir) {
-        return sh(
+        String noOfCommits = sh(
                 script: "git log \$(git describe --abbrev=0)..HEAD --pretty=oneline | wc -l",
                 returnStdout: true
-        ) > 1;
+        );
+        return Integer.parseInt(noOfCommits) > 1;
     }
 }
 
