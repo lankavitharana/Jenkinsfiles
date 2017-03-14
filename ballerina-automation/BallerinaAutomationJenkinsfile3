@@ -176,15 +176,21 @@ def cleanupRepositoryAfterFailure(String repositoryName, String user, String lat
 def String getLatestGitTag (String repositoryDir) {
     sh "echo 'Inside getLatestGitTag: ${repositoryDir}'";
     dir(repositoryDir) {
-        String availableTags = sh (
+       /* String availableTags = sh (
                 script: "git tag",
                 returnStdout: true
-        );
+        );*/
+
+        sh 'git tag > tags'
+        def availableTags = readFile('tags');
+
         if (!"".equals(availableTags.trim())) {
-            String latestTag = sh(
+            /*String latestTag = sh(
                     script: "git describe --abbrev=0",
                     returnStdout: true
-            );
+            );*/
+            sh 'git tag > latesttag'
+            def latestTag = readFile('latesttag').trim();
             sh "echo 'Latest tag: ${latestTag}'";
             return latestTag.trim();
         } else {
