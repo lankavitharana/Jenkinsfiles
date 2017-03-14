@@ -96,7 +96,10 @@ node {
         /*tagMap.each { repository, latestTagBeforeRelease ->
             cleanupRepositoryAfterFailure(repository.toString(), user, latestTagBeforeRelease.toString());
         }*/
-        iterateTagMap(tagMap, user)
+       // iterateTagMap(tagMap, user)
+        for (it2 in mapToList(tagMap)) {
+            cleanupRepositoryAfterFailure(it[0].toString(), user, it2[1].toString())
+        }
 
     } finally {
         stage('Clean Up') {
@@ -202,12 +205,23 @@ def String getLatestGitTag (String repositoryDir) {
     }
 }
 
-@NonCPS
+/*@NonCPS
 def iterateTagMap(tagMap, String user) {
     for (Map.Entry<String, String> entry : tagMap) {
         cleanupRepositoryAfterFailure(entry.key, user, entry.value)
     }
+}*/
+
+@NonCPS
+def mapToList(depmap) {
+    def dlist = []
+    for (entry in depmap) {
+        dlist.add([entry.key, entry.value])
+    }
+    dlist
 }
+
+
 
 
 
