@@ -1,6 +1,6 @@
 #!groovy
 node {
-    Map<String, String> tagMap = new HashMap<>();
+    def tagMap = [:];
     String user = "manuri";
     try {
         env.PATH = "${tool 'apache-maven-3.2.2'}/bin:${env.PATH}"
