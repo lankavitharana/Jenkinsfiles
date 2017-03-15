@@ -71,7 +71,7 @@ node {
 
                 String containerSupportTag = getLatestGitTag(containerSupportRepository);
 
-                release(settingsXMLID, containerSupportRepository, containerSupportTag)
+                release(settingsXMLID, containerSupportRepository)
 
                 tagMap.put(containerSupportRepository, containerSupportTag);
                 //releaseWithFailureRecovery(settingsXMLID, containerSupportRepository, user);
