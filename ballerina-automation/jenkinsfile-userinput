@@ -11,7 +11,7 @@ node {
         def inputParams = "Yes\nNo";
         def userInput = input(
                 id: 'userInput', message: 'need to proceed?', parameters: [
-                [$class: 'TextParameterDefinition', defaultValue: 'No', choices: inputParams, description: 'Test description', name: 'test']
+                [$class: 'ChoiceParameterDefinition', defaultValue: 'No', choices: inputParams, description: 'Test description', name: 'test']
         ])
         echo ("Env: "+userInput)
 
