@@ -1,6 +1,7 @@
 #!groovy
 node {
-    def tagMap = [:];
+   // def tagMap = [:];
+    def tagMap = [];
     String user = "manuri";
     String gitCredentialsID = "manuri-pipeline-git";
     try {
@@ -22,7 +23,8 @@ node {
             cloneRepository(ballerinaRepository, user, gitCredentialsID);
             String ballerinaTag = getLatestGitTag(ballerinaRepository);
             release(settingsXMLID, ballerinaRepository);
-            tagMap.put(ballerinaRepository, ballerinaTag);
+            //tagMap.put(ballerinaRepository, ballerinaTag);
+            tagMap.add([ballerinaRepository, ballerinaTag]);
             //releaseWithFailureRecovery(settingsXMLID, ballerinaRepository, user);
         }*/
 
@@ -37,7 +39,8 @@ node {
 
                 release(settingsXMLID, docerinaRepository)
 
-                tagMap.put(docerinaRepository, docerinaTag);
+                //tagMap.put(docerinaRepository, docerinaTag);
+                tagMap.add([docerinaRepository, docerinaTag]);
 
                 //releaseWithFailureRecovery(settingsXMLID, docerinaRepository, user);
             }, testerinaRelease: {
@@ -50,7 +53,8 @@ node {
 
                 release(settingsXMLID, testerinaRepository)
 
-                tagMap.put(testerinaRepository,testerinaTag );
+                //tagMap.put(testerinaRepository,testerinaTag );
+                tagMap.add([testerinaRepository,testerinaTag]);
                 //releaseWithFailureRecovery(settingsXMLID, testerinaRepository, user);
             }, connectorsRelease: {
                 cloneRepository(connectorsRepository, user, gitCredentialsID);
@@ -61,7 +65,8 @@ node {
                 String connectorsTag = getLatestGitTag(connectorsRepository);
                 release(settingsXMLID, connectorsRepository)
 
-                tagMap.put(connectorsRepository, connectorsTag);
+                //tagMap.put(connectorsRepository, connectorsTag);
+                tagMap.add([connectorsRepository, connectorsTag]);
                 //releaseWithFailureRecovery(settingsXMLID, connectorsRepository, user);
             }, containerSupportRelease: {
                 cloneRepository(containerSupportRepository, user, gitCredentialsID);
@@ -73,7 +78,8 @@ node {
 
                 release(settingsXMLID, containerSupportRepository)
 
-                tagMap.put(containerSupportRepository, containerSupportTag);
+                //tagMap.put(containerSupportRepository, containerSupportTag);
+                tagMap.add([containerSupportRepository, containerSupportTag]);
                 //releaseWithFailureRecovery(settingsXMLID, containerSupportRepository, user);
             }, toolSwaggerBallerinaRelease: {
                 cloneRepository(toolSwaggerBallerinaRepository, user, gitCredentialsID);
@@ -85,7 +91,8 @@ node {
 
                 release(settingsXMLID, toolSwaggerBallerinaRepository);
 
-                tagMap.put(toolSwaggerBallerinaRepository, toolSwaggerTag);
+                //tagMap.put(toolSwaggerBallerinaRepository, toolSwaggerTag);
+                tagMap.add([toolSwaggerBallerinaRepository, toolSwaggerTag]);
                 //releaseWithFailureRecovery(settingsXMLID, toolSwaggerBallerinaRepository, user);
             }, failFast: true
         }
@@ -100,7 +107,8 @@ node {
 
             release(settingsXMLID, toolsDistributionRepository);
 
-            tagMap.put(toolsDistributionRepository, toolsDstributionTag);
+            //tagMap.put(toolsDistributionRepository, toolsDstributionTag);
+            tagMap.add([toolsDistributionRepository, toolsDstributionTag]);
             //releaseWithFailureRecovery(settingsXMLID, toolsDistributionRepository, user);
         }
     } catch (Exception e){
@@ -109,7 +117,10 @@ node {
             cleanupRepositoryAfterFailure(repository.toString(), user, latestTagBeforeRelease.toString());
         }*/
        // iterateTagMap(tagMap, user)
-        for (it2 in mapToList(tagMap)) {
+        /*for (it2 in mapToList(tagMap)) {
+            cleanupRepositoryAfterFailure(it2[0].toString(), user, it2[1].toString(), gitCredentialsID)
+        }*/
+        for (it2 in tagMap) {
             cleanupRepositoryAfterFailure(it2[0].toString(), user, it2[1].toString(), gitCredentialsID)
         }
 
@@ -225,7 +236,7 @@ def iterateTagMap(tagMap, String user) {
         cleanupRepositoryAfterFailure(entry.key, user, entry.value)
     }
 }*/
-
+/*
 @NonCPS
 def mapToList(depmap) {
     def dlist = []
@@ -233,7 +244,7 @@ def mapToList(depmap) {
         dlist.add([entry.key, entry.value])
     }
     dlist
-}
+}*/
 
 
 
