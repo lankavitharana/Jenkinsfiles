@@ -1,7 +1,7 @@
 #!groovy
 node {
     String BUILD = "Build", RELEASE = "Release";
-    String test = $GIT_CREDENTIALS_ID;
+    String test = GIT_CREDENTIALS_ID;
     sh "echo ${test}";
     def expectedAction = BUILD;
     stage ('Request Build Or Release') {
@@ -16,7 +16,7 @@ node {
 
     def tagMap = [];
     String user = "manuri";
-    String gitCredentialsID = GIT_CREDENTIALS_ID;//"manuri-pipeline-git";
+    String gitCredentialsID = "manuri-pipeline-git";
     try {
         env.PATH = "${tool 'apache-maven-3.2.2'}/bin:${env.PATH}"
         env.JAVA_HOME="${tool 'Oracle-JDK-1.8.0_45'}"
