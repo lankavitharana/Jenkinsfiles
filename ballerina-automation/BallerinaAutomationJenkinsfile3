@@ -18,6 +18,7 @@ node {
         String toolsDistributionRepository = "tools-distribution-temp";
         String toolSwaggerBallerinaRepository = "tool-swagger-ballerina-temp";
         String ballerinaGroudId = "org.ballerinalang";
+        String propertyUpdateCommitMessage = "Updating versions of org.ballerinalang.* dependencies";
 
         stage('Building ballerina') {
             cloneRepository(ballerinaRepository, user, gitCredentialsID);
@@ -30,49 +31,49 @@ node {
         stage('Building docerina, testerina, connectors, container-support') {
             parallel composerRelease: {
                 cloneRepository(composerRepository, user, gitCredentialsID);
-                updateProperties(composerRepository, settingsXMLID, "Updating properties",
+                updateProperties(composerRepository, settingsXMLID, propertyUpdateCommitMessage,
                         "${ballerinaGroudId}:*");
                 String composerTag = getLatestGitTag(composerRepository);
                 tagMap.add([composerRepository, composerTag]);
-                release(settingsXMLID, composerRepository)
+                release(settingsXMLID, composerRepository);
 
 
             }, docerinaRelease: {
                 cloneRepository(docerinaRepository, user, gitCredentialsID);
-                updateProperties(docerinaRepository, settingsXMLID, "Updating properties",
+                updateProperties(docerinaRepository, settingsXMLID, propertyUpdateCommitMessage,
                         "${ballerinaGroudId}:*");
                 String docerinaTag = getLatestGitTag(docerinaRepository);
                 tagMap.add([docerinaRepository, docerinaTag]);
-                release(settingsXMLID, docerinaRepository)
+                release(settingsXMLID, docerinaRepository);
 
 
             }, testerinaRelease: {
                 cloneRepository(testerinaRepository, user, gitCredentialsID);
-                updateProperties(testerinaRepository, settingsXMLID, "Updating properties",
+                updateProperties(testerinaRepository, settingsXMLID, propertyUpdateCommitMessage,
                         "${ballerinaGroudId}:*");
                 String testerinaTag = getLatestGitTag(testerinaRepository);
                 tagMap.add([testerinaRepository,testerinaTag]);
-                release(settingsXMLID, testerinaRepository)
+                release(settingsXMLID, testerinaRepository);
 
             }, connectorsRelease: {
                 cloneRepository(connectorsRepository, user, gitCredentialsID);
-                updateProperties(connectorsRepository, settingsXMLID, "Updating properties",
+                updateProperties(connectorsRepository, settingsXMLID, propertyUpdateCommitMessage,
                         "${ballerinaGroudId}:*");
                 String connectorsTag = getLatestGitTag(connectorsRepository);
                 tagMap.add([connectorsRepository, connectorsTag]);
-                release(settingsXMLID, connectorsRepository)
+                release(settingsXMLID, connectorsRepository);
 
             }, containerSupportRelease: {
                 cloneRepository(containerSupportRepository, user, gitCredentialsID);
-                updateProperties(containerSupportRepository, settingsXMLID, "Updating properties",
+                updateProperties(containerSupportRepository, settingsXMLID, propertyUpdateCommitMessage,
                         "${ballerinaGroudId}:*");
                 String containerSupportTag = getLatestGitTag(containerSupportRepository);
                 tagMap.add([containerSupportRepository, containerSupportTag]);
-                release(settingsXMLID, containerSupportRepository)
+                release(settingsXMLID, containerSupportRepository);
 
             }, toolSwaggerBallerinaRelease: {
                 cloneRepository(toolSwaggerBallerinaRepository, user, gitCredentialsID);
-                updateProperties(toolSwaggerBallerinaRepository, settingsXMLID, "Updating properties",
+                updateProperties(toolSwaggerBallerinaRepository, settingsXMLID, propertyUpdateCommitMessage,
                         "${ballerinaGroudId}:*");
                 String toolSwaggerTag = getLatestGitTag(toolSwaggerBallerinaRepository);
                 tagMap.add([toolSwaggerBallerinaRepository, toolSwaggerTag]);
@@ -83,7 +84,7 @@ node {
 
         stage('Building tools-distribution') {
             cloneRepository(toolsDistributionRepository, user, gitCredentialsID);
-            updateProperties(toolsDistributionRepository, settingsXMLID, "Updating properties",
+            updateProperties(toolsDistributionRepository, settingsXMLID, propertyUpdateCommitMessage,
                     "${ballerinaGroudId}:*");
             String toolsDstributionTag = getLatestGitTag(toolsDistributionRepository);
             tagMap.add([toolsDistributionRepository, toolsDstributionTag]);
