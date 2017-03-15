@@ -38,6 +38,8 @@ node {
                 String ballerinaTag = getLatestGitTag(ballerinaRepository);
                 tagMap.add([ballerinaRepository, ballerinaTag]);
                 release(settingsXMLID, ballerinaRepository);
+            } else {
+                build(settingsXMLID, ballerinaRepository);
             }
 
         }
