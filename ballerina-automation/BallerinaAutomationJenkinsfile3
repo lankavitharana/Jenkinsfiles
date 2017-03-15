@@ -17,8 +17,8 @@ node {
     //String gitCredentialsID = GIT_CREDENTIALS_ID;
     String gitCredentialsID = "manuri-pipeline-git";
     try {
-        String maven = MAVEN_TOOL;
-        String javaHome = JDK;
+       // String maven = MAVEN_TOOL;
+        //String javaHome = JDK;
         env.PATH = "${tool 'apache-maven-3.2.2'}/bin:${env.PATH}"
         //env.PATH = "${tool maven}/bin:${env.PATH}"
         env.JAVA_HOME="${tool 'Oracle-JDK-1.8.0_45'}"
