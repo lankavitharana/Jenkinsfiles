@@ -19,9 +19,9 @@ node {
         String maven = MAVEN_TOOL;
         String javaHome = JDK;
         //env.PATH = "${tool 'apache-maven-3.2.2'}/bin:${env.PATH}"
-        env.PATH = "${tool "${maven}"}/bin:${env.PATH}"
+        env.PATH = "${tool maven}/bin:${env.PATH}"
         //env.JAVA_HOME="${tool 'Oracle-JDK-1.8.0_45'}"
-        env.JAVA_HOME="${tool "${javaHome}"}"
+        env.JAVA_HOME="${tool javaHome}"
         env.PATH="${env.JAVA_HOME}/bin:${env.PATH}"
 
        // String settingsXMLID = "adb07180-fa9c-4bea-94c4-130813b8018c-manuri";
