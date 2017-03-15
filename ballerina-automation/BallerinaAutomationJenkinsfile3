@@ -2,7 +2,7 @@
 node {
     String BUILD = "Build", RELEASE = "Release";
     def expectedAction = BUILD;
-    stage 'Request Build Or Release' {
+    stage ('Request Build Or Release') {
         def inputParams = "Build\nRelease";
         expectedAction = input(
                 id: 'userInput', message: 'Please choose Build Or Release option', parameters: [
