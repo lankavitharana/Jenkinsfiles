@@ -1,0 +1,116 @@
+#!groovy
+node {
+    String user = "manuri";
+    String gitCredentialsID = "manuri-pipeline-git";
+    try {
+        env.PATH = "${tool 'apache-maven-3.2.2'}/bin:${env.PATH}"
+        env.JAVA_HOME="${tool 'Oracle-JDK-1.8.0_45'}"
+        env.PATH="${env.JAVA_HOME}/bin:${env.PATH}"
+
+        String settingsXMLID = "adb07180-fa9c-4bea-94c4-130813b8018c-manuri";
+        String ballerinaRepository = "ballerina-temp";
+        String composerRepository = "composer-temp";
+        String docerinaRepository = "docerina-temp";
+        String testerinaRepository = "testerina-temp";
+        String connectorsRepository = "connectors-temp";
+        String containerSupportRepository = "container-support-temp";
+        String toolsDistributionRepository = "tools-distribution-temp";
+        String toolSwaggerBallerinaRepository = "tool-swagger-ballerina-temp";
+        String ballerinaGroudId = "org.ballerinalang";
+
+        stage('Building ballerina') {
+            cloneRepository(ballerinaRepository, user, gitCredentialsID);
+            build(settingsXMLID, ballerinaRepository);
+        }
+
+        stage('Building docerina, testerina, connectors, container-support') {
+            parallel composerBuild: {
+                cloneRepository(composerRepository, user, gitCredentialsID);
+                updateProperties(composerRepository, settingsXMLID, "Updating properties",
+                        "${ballerinaGroudId}:*");
+                build(settingsXMLID, composerRepository)
+
+            }, docerinaBuild: {
+                cloneRepository(docerinaRepository, user, gitCredentialsID);
+                updateProperties(docerinaRepository, settingsXMLID, "Updating properties",
+                        "${ballerinaGroudId}:*");
+                build(settingsXMLID, docerinaRepository)
+
+            }, testerinaBuild: {
+                cloneRepository(testerinaRepository, user, gitCredentialsID);
+                updateProperties(testerinaRepository, settingsXMLID, "Updating properties",
+                        "${ballerinaGroudId}:*");
+                build(settingsXMLID, testerinaRepository)
+            }, connectorsBuild: {
+                cloneRepository(connectorsRepository, user, gitCredentialsID);
+                updateProperties(connectorsRepository, settingsXMLID, "Updating properties",
+                        "${ballerinaGroudId}:*");
+                build(settingsXMLID, connectorsRepository)
+            }, containerSupportBuild: {
+                cloneRepository(containerSupportRepository, user, gitCredentialsID);
+                updateProperties(containerSupportRepository, settingsXMLID, "Updating properties",
+                        "${ballerinaGroudId}:*");
+                build(settingsXMLID, containerSupportRepository)
+            }, toolSwaggerBallerinaBuild: {
+                cloneRepository(toolSwaggerBallerinaRepository, user, gitCredentialsID);
+                updateProperties(toolSwaggerBallerinaRepository, settingsXMLID, "Updating properties",
+                        "${ballerinaGroudId}:*");
+                build(settingsXMLID, toolSwaggerBallerinaRepository);
+            }, failFast: true
+        }
+
+        stage('Building tools-distribution') {
+            cloneRepository(toolsDistributionRepository, user, gitCredentialsID);
+            updateProperties(toolsDistributionRepository, settingsXMLID, "Updating properties",
+                    "${ballerinaGroudId}:*");
+            build(settingsXMLID, toolsDistributionRepository);
+        }
+    } finally {
+        stage('Clean Up') {
+            try {
+                deleteDir();
+            } catch (Exception e) {
+                sh("echo 'Unable to delete directory. Please manually delete'");
+            }
+        }
+    }
+}
+
+def cloneRepository(String repositoryName, String user, String credentials) {
+    checkout([
+            $class: 'GitSCM',
+            branches: [[name: '*/master']],
+            doGenerateSubmoduleConfigurations: false,
+            extensions: [[$class: 'LocalBranch', localBranch: 'release'],
+                         [$class: 'RelativeTargetDirectory', relativeTargetDir: repositoryName]],
+            submoduleCfg: [],
+            userRemoteConfigs:
+                    [[credentialsId: credentials,
+                      url: "http://github.com/${user}/${repositoryName}.git"]]])
+}
+
+def updateProperties(String repositoryName, String settingsXml, String commitMessage, String propertiesList) {
+    configFileProvider(
+            [configFile(fileId: settingsXml, variable: 'MAVEN_SETTINGS')]) {
+        dir(repositoryName) {
+            sh "mvn -s $MAVEN_SETTINGS versions:update-properties -Dincludes=${propertiesList} -DallowSnapshots=true"
+        }
+    }
+}
+
+def build(String settingsXml, String repositoryDir) {
+    configFileProvider(
+            [configFile(fileId: settingsXml, variable: 'MAVEN_SETTINGS')]) {
+        dir(repositoryDir) { sh 'mvn -s $MAVEN_SETTINGS clean install -DskipTests=true"' }
+    }
+}
+
+
+
+
+
+
+
+
+
+
