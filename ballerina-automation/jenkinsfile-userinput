@@ -8,9 +8,10 @@ node {
         String user = "manuri";
 
         stage 'user input test'
+        def inputParams = "Yes\nNo";
         def userInput = input(
                 id: 'userInput', message: 'need to proceed?', parameters: [
-                [$class: 'TextParameterDefinition', defaultValue: 'No', description: 'Test description', name: 'test']
+                [$class: 'TextParameterDefinition', defaultValue: 'No', choices: inputParams, description: 'Test description', name: 'test']
         ])
         echo ("Env: "+userInput)
 
