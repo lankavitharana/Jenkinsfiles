@@ -116,7 +116,7 @@ node {
     } finally {
         stage('Clean Up') {
             try {
-                deleteDir();
+              //  deleteDir();
             } catch (Exception e) {
                 sh("echo 'Unable to delete directory. Please manually delete'");
                 //println("Unable to delete directory. Please manually delete")
@@ -209,6 +209,8 @@ def String getLatestGitTag (String repositoryDir) {
             sh 'git describe --abbrev=0 > latesttag'
             def latestTag = readFile('latesttag').trim();
             sh "echo 'Latest tag: ${latestTag}'";
+            sh 'rm latesttag';
+            sh 'rm tags';
             return latestTag.trim();
         } else {
             sh "echo 'No tags available'";
