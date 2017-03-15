@@ -98,7 +98,7 @@ node {
         }*/
        // iterateTagMap(tagMap, user)
         for (it2 in mapToList(tagMap)) {
-            cleanupRepositoryAfterFailure(it[0].toString(), user, it2[1].toString())
+            cleanupRepositoryAfterFailure(it2[0].toString(), user, it2[1].toString())
         }
 
     } finally {
