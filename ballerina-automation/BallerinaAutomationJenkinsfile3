@@ -1,5 +1,17 @@
 #!groovy
 node {
+    String BUILD = "Build", RELEASE = "Release";
+    def expectedAction = BUILD;
+    stage 'Request Build Or Release' {
+        def inputParams = "Build\nRelease";
+        expectedAction = input(
+                id: 'userInput', message: 'Please choose Build Or Release option', parameters: [
+                [$class: 'ChoiceParameterDefinition', defaultValue: 'Build', choices: inputParams, description: 'Build Or Release', name: 'Choice']
+        ])
+    }
+
+    boolean isRelease = RELEASE.equals(expectedAction);
+
     def tagMap = [];
     String user = "manuri";
     String gitCredentialsID = "manuri-pipeline-git";
@@ -22,62 +34,88 @@ node {
 
         stage('Building ballerina') {
             cloneRepository(ballerinaRepository, user, gitCredentialsID);
-            String ballerinaTag = getLatestGitTag(ballerinaRepository);
-            tagMap.add([ballerinaRepository, ballerinaTag]);
-            release(settingsXMLID, ballerinaRepository);
+            if (isRelease) {
+                String ballerinaTag = getLatestGitTag(ballerinaRepository);
+                tagMap.add([ballerinaRepository, ballerinaTag]);
+                release(settingsXMLID, ballerinaRepository);
+            }
 
         }
 
         stage('Building docerina, testerina, connectors, container-support') {
-            parallel composerRelease: {
+            parallel composerBuild: {
                 cloneRepository(composerRepository, user, gitCredentialsID);
                 updateProperties(composerRepository, settingsXMLID, propertyUpdateCommitMessage,
-                        "${ballerinaGroudId}:*");
-                String composerTag = getLatestGitTag(composerRepository);
-                tagMap.add([composerRepository, composerTag]);
-                release(settingsXMLID, composerRepository);
+                        "${ballerinaGroudId}:*", !isRelease);
+                if (isRelease) {
+                    String composerTag = getLatestGitTag(composerRepository);
+                    tagMap.add([composerRepository, composerTag]);
+                    release(settingsXMLID, composerRepository);
+                } else {
+                    build(settingsXMLID, composerRepository);
+                }
 
 
-            }, docerinaRelease: {
+            }, docerinaBuild: {
                 cloneRepository(docerinaRepository, user, gitCredentialsID);
                 updateProperties(docerinaRepository, settingsXMLID, propertyUpdateCommitMessage,
-                        "${ballerinaGroudId}:*");
-                String docerinaTag = getLatestGitTag(docerinaRepository);
-                tagMap.add([docerinaRepository, docerinaTag]);
-                release(settingsXMLID, docerinaRepository);
+                        "${ballerinaGroudId}:*", !isRelease);
+                if (isRelease) {
+                    String docerinaTag = getLatestGitTag(docerinaRepository);
+                    tagMap.add([docerinaRepository, docerinaTag]);
+                    release(settingsXMLID, docerinaRepository);
+                } else {
+                    build(settingsXMLID, docerinaRepository);
+                }
 
 
-            }, testerinaRelease: {
+            }, testerinaBuild: {
                 cloneRepository(testerinaRepository, user, gitCredentialsID);
                 updateProperties(testerinaRepository, settingsXMLID, propertyUpdateCommitMessage,
-                        "${ballerinaGroudId}:*");
-                String testerinaTag = getLatestGitTag(testerinaRepository);
-                tagMap.add([testerinaRepository,testerinaTag]);
-                release(settingsXMLID, testerinaRepository);
+                        "${ballerinaGroudId}:*", !isRelease);
+                if (isRelease) {
+                    String testerinaTag = getLatestGitTag(testerinaRepository);
+                    tagMap.add([testerinaRepository, testerinaTag]);
+                    release(settingsXMLID, testerinaRepository);
+                } else {
+                    build(settingsXMLID, testerinaRepository);
+                }
 
-            }, connectorsRelease: {
+            }, connectorsBuild: {
                 cloneRepository(connectorsRepository, user, gitCredentialsID);
                 updateProperties(connectorsRepository, settingsXMLID, propertyUpdateCommitMessage,
-                        "${ballerinaGroudId}:*");
-                String connectorsTag = getLatestGitTag(connectorsRepository);
-                tagMap.add([connectorsRepository, connectorsTag]);
-                release(settingsXMLID, connectorsRepository);
+                        "${ballerinaGroudId}:*", !isRelease);
+                if (isRelease) {
+                    String connectorsTag = getLatestGitTag(connectorsRepository);
+                    tagMap.add([connectorsRepository, connectorsTag]);
+                    release(settingsXMLID, connectorsRepository);
+                } else {
+                    build(settingsXMLID, connectorsRepository);
+                }
 
-            }, containerSupportRelease: {
+            }, containerSupportBuild: {
                 cloneRepository(containerSupportRepository, user, gitCredentialsID);
                 updateProperties(containerSupportRepository, settingsXMLID, propertyUpdateCommitMessage,
-                        "${ballerinaGroudId}:*");
-                String containerSupportTag = getLatestGitTag(containerSupportRepository);
-                tagMap.add([containerSupportRepository, containerSupportTag]);
-                release(settingsXMLID, containerSupportRepository);
+                        "${ballerinaGroudId}:*", !isRelease);
+                if (isRelease) {
+                    String containerSupportTag = getLatestGitTag(containerSupportRepository);
+                    tagMap.add([containerSupportRepository, containerSupportTag]);
+                    release(settingsXMLID, containerSupportRepository);
+                } else {
+                    build(settingsXMLID, containerSupportRepository);
+                }
 
-            }, toolSwaggerBallerinaRelease: {
+            }, toolSwaggerBallerinaBuild: {
                 cloneRepository(toolSwaggerBallerinaRepository, user, gitCredentialsID);
                 updateProperties(toolSwaggerBallerinaRepository, settingsXMLID, propertyUpdateCommitMessage,
-                        "${ballerinaGroudId}:*");
-                String toolSwaggerTag = getLatestGitTag(toolSwaggerBallerinaRepository);
-                tagMap.add([toolSwaggerBallerinaRepository, toolSwaggerTag]);
-                release(settingsXMLID, toolSwaggerBallerinaRepository);
+                        "${ballerinaGroudId}:*", !isRelease);
+                if (isRelease) {
+                    String toolSwaggerTag = getLatestGitTag(toolSwaggerBallerinaRepository);
+                    tagMap.add([toolSwaggerBallerinaRepository, toolSwaggerTag]);
+                    release(settingsXMLID, toolSwaggerBallerinaRepository);
+                } else {
+                    build(settingsXMLID, toolSwaggerBallerinaRepository);
+                }
 
             }, failFast: true
         }
@@ -85,16 +123,22 @@ node {
         stage('Building tools-distribution') {
             cloneRepository(toolsDistributionRepository, user, gitCredentialsID);
             updateProperties(toolsDistributionRepository, settingsXMLID, propertyUpdateCommitMessage,
-                    "${ballerinaGroudId}:*");
-            String toolsDstributionTag = getLatestGitTag(toolsDistributionRepository);
-            tagMap.add([toolsDistributionRepository, toolsDstributionTag]);
-            release(settingsXMLID, toolsDistributionRepository);
+                    "${ballerinaGroudId}:*", !isRelease);
+            if (isRelease) {
+                String toolsDstributionTag = getLatestGitTag(toolsDistributionRepository);
+                tagMap.add([toolsDistributionRepository, toolsDstributionTag]);
+                release(settingsXMLID, toolsDistributionRepository);
+            } else {
+                build(settingsXMLID, toolsDistributionRepository);
+            }
 
         }
     } catch (Exception e){
         sh "echo 'An exception has occurred in during the build process'";
-        for (entry in tagMap) {
-            cleanupRepositoryAfterFailure(entry[0].toString(), user, entry[1].toString(), gitCredentialsID)
+        if (RELEASE.equals(expectedAction)) {
+            for (entry in tagMap) {
+                cleanupRepositoryAfterFailure(entry[0].toString(), user, entry[1].toString(), gitCredentialsID)
+            }
         }
         throw e;
 
@@ -122,11 +166,15 @@ def cloneRepository(String repositoryName, String user, String credentials) {
                       url: "http://github.com/${user}/${repositoryName}.git"]]])
 }
 
-def updateProperties(String repositoryName, String settingsXml, String commitMessage, String propertiesList) {
+def updateProperties(String repositoryName, String settingsXml, String commitMessage, String propertiesList, boolean allowSnapshots) {
     configFileProvider(
             [configFile(fileId: settingsXml, variable: 'MAVEN_SETTINGS')]) {
         dir(repositoryName) {
-            sh "mvn -s $MAVEN_SETTINGS versions:update-properties -Dincludes=${propertiesList}"
+            if (!allowSnapshots) {
+                sh "mvn -s $MAVEN_SETTINGS versions:update-properties -Dincludes=${propertiesList}"
+            } else {
+                sh "mvn -s $MAVEN_SETTINGS versions:update-properties -Dincludes=${propertiesList} -DallowSnapshots=true"
+            }
             boolean changesPresent = sh (
                     script: "git diff-index --quiet HEAD",
                     returnStatus: true
@@ -143,6 +191,13 @@ def release(String settingsXml, String repositoryDir) {
     configFileProvider(
             [configFile(fileId: settingsXml, variable: 'MAVEN_SETTINGS')]) {
         dir(repositoryDir) { sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -B -Darguments="-Dmaven.deploy.skip=true -DskipTests=true"' }
+    }
+}
+
+def build(String settingsXml, String repositoryDir) {
+    configFileProvider(
+            [configFile(fileId: settingsXml, variable: 'MAVEN_SETTINGS')]) {
+        dir(repositoryDir) { sh 'mvn -s $MAVEN_SETTINGS clean install -DskipTests=true' }
     }
 }
 
