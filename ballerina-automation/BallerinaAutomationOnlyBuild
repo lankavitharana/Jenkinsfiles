@@ -101,7 +101,7 @@ def updateProperties(String repositoryName, String settingsXml, String commitMes
 def build(String settingsXml, String repositoryDir) {
     configFileProvider(
             [configFile(fileId: settingsXml, variable: 'MAVEN_SETTINGS')]) {
-        dir(repositoryDir) { sh 'mvn -s $MAVEN_SETTINGS clean install -DskipTests=true"' }
+        dir(repositoryDir) { sh 'mvn -s $MAVEN_SETTINGS clean install -DskipTests=true' }
     }
 }
 
