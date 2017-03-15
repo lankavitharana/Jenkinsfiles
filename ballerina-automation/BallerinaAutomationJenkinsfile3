@@ -20,8 +20,9 @@ node {
 
        /* stage('Building ballerina') {
             cloneRepository(ballerinaRepository, user, gitCredentialsID);
+            String ballerinaTag = getLatestGitTag(ballerinaRepository);
             release(settingsXMLID, ballerinaRepository);
-            tagMap.put(ballerinaRepository, getLatestGitTag(ballerinaRepository));
+            tagMap.put(ballerinaRepository, ballerinaTag);
             //releaseWithFailureRecovery(settingsXMLID, ballerinaRepository, user);
         }*/
 
@@ -32,9 +33,11 @@ node {
                 updateProperties(docerinaRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
                         "${ballerinaGroudId}:*");
 
+                String docerinaTag = getLatestGitTag(docerinaRepository);
+
                 release(settingsXMLID, docerinaRepository)
 
-                tagMap.put(docerinaRepository, getLatestGitTag(docerinaRepository));
+                tagMap.put(docerinaRepository, docerinaTag);
 
                 //releaseWithFailureRecovery(settingsXMLID, docerinaRepository, user);
             }, testerinaRelease: {
@@ -43,9 +46,11 @@ node {
                 updateProperties(testerinaRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
                         "${ballerinaGroudId}:*");
 
+                String testerinaTag = getLatestGitTag(testerinaRepository);
+
                 release(settingsXMLID, testerinaRepository)
 
-                tagMap.put(testerinaRepository, getLatestGitTag(testerinaRepository));
+                tagMap.put(testerinaRepository,testerinaTag );
                 //releaseWithFailureRecovery(settingsXMLID, testerinaRepository, user);
             }, connectorsRelease: {
                 cloneRepository(connectorsRepository, user, gitCredentialsID);
@@ -53,9 +58,10 @@ node {
                 updateProperties(connectorsRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
                         "${ballerinaGroudId}:*");
 
+                String connectorsTag = getLatestGitTag(connectorsRepository);
                 release(settingsXMLID, connectorsRepository)
 
-                tagMap.put(connectorsRepository, getLatestGitTag(connectorsRepository));
+                tagMap.put(connectorsRepository, connectorsTag);
                 //releaseWithFailureRecovery(settingsXMLID, connectorsRepository, user);
             }, containerSupportRelease: {
                 cloneRepository(containerSupportRepository, user, gitCredentialsID);
@@ -63,9 +69,11 @@ node {
                 updateProperties(containerSupportRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
                         "${ballerinaGroudId}:*");
 
-                release(settingsXMLID, containerSupportRepository)
+                String containerSupportTag = getLatestGitTag(containerSupportRepository);
 
-                tagMap.put(containerSupportRepository, getLatestGitTag(containerSupportRepository));
+                release(settingsXMLID, containerSupportRepository, containerSupportTag)
+
+                tagMap.put(containerSupportRepository, containerSupportTag);
                 //releaseWithFailureRecovery(settingsXMLID, containerSupportRepository, user);
             }, toolSwaggerBallerinaRelease: {
                 cloneRepository(toolSwaggerBallerinaRepository, user, gitCredentialsID);
@@ -73,9 +81,11 @@ node {
                 updateProperties(toolSwaggerBallerinaRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
                         "${ballerinaGroudId}:*");
 
+                String toolSwaggerTag = getLatestGitTag(toolSwaggerBallerinaRepository);
+
                 release(settingsXMLID, toolSwaggerBallerinaRepository);
 
-                tagMap.put(toolSwaggerBallerinaRepository, getLatestGitTag(toolSwaggerBallerinaRepository));
+                tagMap.put(toolSwaggerBallerinaRepository, toolSwaggerTag);
                 //releaseWithFailureRecovery(settingsXMLID, toolSwaggerBallerinaRepository, user);
             }, failFast: true
         }
@@ -86,9 +96,11 @@ node {
             updateProperties(toolsDistributionRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
                     "${ballerinaGroudId}:*");
 
+            String toolsDstributionTag = getLatestGitTag(toolsDistributionRepository);
+
             release(settingsXMLID, toolsDistributionRepository);
 
-            tagMap.put(toolsDistributionRepository, getLatestGitTag(toolsDistributionRepository));
+            tagMap.put(toolsDistributionRepository, toolsDstributionTag);
             //releaseWithFailureRecovery(settingsXMLID, toolsDistributionRepository, user);
         }
     } catch (Exception e){
@@ -194,7 +206,7 @@ def String getLatestGitTag (String repositoryDir) {
                     script: "git describe --abbrev=0",
                     returnStdout: true
             );*/
-            sh 'git tag > latesttag'
+            sh 'git describe --abbrev=0 > latesttag'
             def latestTag = readFile('latesttag').trim();
             sh "echo 'Latest tag: ${latestTag}'";
             return latestTag.trim();
