@@ -1,6 +1,5 @@
 #!groovy
 node {
-   // def tagMap = [:];
     def tagMap = [];
     String user = "manuri";
     String gitCredentialsID = "manuri-pipeline-git";
@@ -11,6 +10,7 @@ node {
 
         String settingsXMLID = "adb07180-fa9c-4bea-94c4-130813b8018c-manuri";
         String ballerinaRepository = "ballerina-temp";
+        String composerRepository = "composer-temp";
         String docerinaRepository = "docerina-temp";
         String testerinaRepository = "testerina-temp";
         String connectorsRepository = "connectors-temp";
@@ -23,114 +23,78 @@ node {
             cloneRepository(ballerinaRepository, user, gitCredentialsID);
             String ballerinaTag = getLatestGitTag(ballerinaRepository);
             release(settingsXMLID, ballerinaRepository);
-            //tagMap.put(ballerinaRepository, ballerinaTag);
             tagMap.add([ballerinaRepository, ballerinaTag]);
-            //releaseWithFailureRecovery(settingsXMLID, ballerinaRepository, user);
         }*/
 
         stage('Building docerina, testerina, connectors, container-support') {
-            parallel docerinaRelease: {
-                cloneRepository(docerinaRepository, user, gitCredentialsID);
-
-                updateProperties(docerinaRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
+            parallel composerRelease: {
+                cloneRepository(composerRepository, user, gitCredentialsID);
+                updateProperties(composerRepository, settingsXMLID, "Updating properties",
                         "${ballerinaGroudId}:*");
+                String composerTag = getLatestGitTag(composerRepository);
+                release(settingsXMLID, composerRepository)
+                tagMap.add([composerRepository, composerTag]);
 
+            }, docerinaRelease: {
+                cloneRepository(docerinaRepository, user, gitCredentialsID);
+                updateProperties(docerinaRepository, settingsXMLID, "Updating properties",
+                        "${ballerinaGroudId}:*");
                 String docerinaTag = getLatestGitTag(docerinaRepository);
-
                 release(settingsXMLID, docerinaRepository)
-
-                //tagMap.put(docerinaRepository, docerinaTag);
                 tagMap.add([docerinaRepository, docerinaTag]);
 
-                //releaseWithFailureRecovery(settingsXMLID, docerinaRepository, user);
             }, testerinaRelease: {
                 cloneRepository(testerinaRepository, user, gitCredentialsID);
-
-                updateProperties(testerinaRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
+                updateProperties(testerinaRepository, settingsXMLID, "Updating properties",
                         "${ballerinaGroudId}:*");
-
                 String testerinaTag = getLatestGitTag(testerinaRepository);
-
                 release(settingsXMLID, testerinaRepository)
-
-                //tagMap.put(testerinaRepository,testerinaTag );
                 tagMap.add([testerinaRepository,testerinaTag]);
-                //releaseWithFailureRecovery(settingsXMLID, testerinaRepository, user);
             }, connectorsRelease: {
                 cloneRepository(connectorsRepository, user, gitCredentialsID);
-
-                updateProperties(connectorsRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
+                updateProperties(connectorsRepository, settingsXMLID, "Updating properties",
                         "${ballerinaGroudId}:*");
-
                 String connectorsTag = getLatestGitTag(connectorsRepository);
                 release(settingsXMLID, connectorsRepository)
-
-                //tagMap.put(connectorsRepository, connectorsTag);
                 tagMap.add([connectorsRepository, connectorsTag]);
-                //releaseWithFailureRecovery(settingsXMLID, connectorsRepository, user);
             }, containerSupportRelease: {
                 cloneRepository(containerSupportRepository, user, gitCredentialsID);
-
-                updateProperties(containerSupportRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
+                updateProperties(containerSupportRepository, settingsXMLID, "Updating properties",
                         "${ballerinaGroudId}:*");
-
                 String containerSupportTag = getLatestGitTag(containerSupportRepository);
-
                 release(settingsXMLID, containerSupportRepository)
-
-                //tagMap.put(containerSupportRepository, containerSupportTag);
                 tagMap.add([containerSupportRepository, containerSupportTag]);
-                //releaseWithFailureRecovery(settingsXMLID, containerSupportRepository, user);
             }, toolSwaggerBallerinaRelease: {
                 cloneRepository(toolSwaggerBallerinaRepository, user, gitCredentialsID);
-
-                updateProperties(toolSwaggerBallerinaRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
+                updateProperties(toolSwaggerBallerinaRepository, settingsXMLID, "Updating properties",
                         "${ballerinaGroudId}:*");
-
                 String toolSwaggerTag = getLatestGitTag(toolSwaggerBallerinaRepository);
-
                 release(settingsXMLID, toolSwaggerBallerinaRepository);
-
-                //tagMap.put(toolSwaggerBallerinaRepository, toolSwaggerTag);
                 tagMap.add([toolSwaggerBallerinaRepository, toolSwaggerTag]);
-                //releaseWithFailureRecovery(settingsXMLID, toolSwaggerBallerinaRepository, user);
             }, failFast: true
         }
 
         stage('Building tools-distribution') {
             cloneRepository(toolsDistributionRepository, user, gitCredentialsID);
-
-            updateProperties(toolsDistributionRepository, gitCredentialsID, settingsXMLID, user, "Updating properties",
+            updateProperties(toolsDistributionRepository, settingsXMLID, "Updating properties",
                     "${ballerinaGroudId}:*");
-
             String toolsDstributionTag = getLatestGitTag(toolsDistributionRepository);
-
             release(settingsXMLID, toolsDistributionRepository);
-
-            //tagMap.put(toolsDistributionRepository, toolsDstributionTag);
             tagMap.add([toolsDistributionRepository, toolsDstributionTag]);
-            //releaseWithFailureRecovery(settingsXMLID, toolsDistributionRepository, user);
         }
     } catch (Exception e){
-        sh "echo 'An exception has occurred in one of the builds'";
-        /*tagMap.each { repository, latestTagBeforeRelease ->
-            cleanupRepositoryAfterFailure(repository.toString(), user, latestTagBeforeRelease.toString());
-        }*/
-       // iterateTagMap(tagMap, user)
-        /*for (it2 in mapToList(tagMap)) {
-            cleanupRepositoryAfterFailure(it2[0].toString(), user, it2[1].toString(), gitCredentialsID)
-        }*/
-        for (it2 in tagMap) {
-            cleanupRepositoryAfterFailure(it2[0].toString(), user, it2[1].toString(), gitCredentialsID)
+        sh "echo 'An exception has occurred in during the build process'";
+        for (entry in tagMap) {
+            cleanupRepositoryAfterFailure(entry[0].toString(), user, entry[1].toString(), gitCredentialsID)
         }
+        throw e;
 
     } finally {
         stage('Clean Up') {
             try {
-              //  deleteDir();
+                deleteDir();
             } catch (Exception e) {
                 sh("echo 'Unable to delete directory. Please manually delete'");
-                //println("Unable to delete directory. Please manually delete")
             }
         }
     }
@@ -149,7 +113,7 @@ def cloneRepository(String repositoryName, String user, String credentials) {
                       url: "http://github.com/${user}/${repositoryName}.git"]]])
 }
 
-def updateProperties(String repositoryName, String credentials, String settingsXml, String user, String commitMessage, String propertiesList) {
+def updateProperties(String repositoryName, String settingsXml, String commitMessage, String propertiesList) {
     configFileProvider(
             [configFile(fileId: settingsXml, variable: 'MAVEN_SETTINGS')]) {
         dir(repositoryName) {
@@ -174,10 +138,10 @@ def release(String settingsXml, String repositoryDir) {
 }
 
 def cleanupRepositoryAfterFailure(String repositoryName, String user, String latestTagBeforeRelease, String credentials) {
-    sh "echo 'Failure has occurred in ${repositoryName} build.'";
-    sh "echo 'Latest tag before release ${latestTagBeforeRelease}'";
+    sh "echo 'Cleaning up ${repositoryName} repository.'";
+    sh "echo 'Latest tag before release is: ${latestTagBeforeRelease}'";
     String latestTagAfterRelease = getLatestGitTag(repositoryName);
-    sh "echo 'Latest tag after release ${latestTagAfterRelease}'";
+    sh "echo 'Latest tag after release is: ${latestTagAfterRelease}'";
     dir(repositoryName) {
         withCredentials(
                 [[$class          : 'UsernamePasswordMultiBinding',
@@ -186,7 +150,7 @@ def cleanupRepositoryAfterFailure(String repositoryName, String user, String lat
                   passwordVariable: 'GIT_PASSWORD']]) {
             sh("git remote set-url origin https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${user}/${repositoryName}.git")
             if (latestTagAfterRelease != null && !latestTagAfterRelease.equals(latestTagBeforeRelease)) {
-                sh "echo 'Deleting tag ${latestTagAfterRelease} in ${repositoryName}'";
+                sh "echo 'Deleting tag ${latestTagAfterRelease} of ${repositoryName}'";
                 sh(
                         script: "git push --delete origin ${latestTagAfterRelease}",
                         returnStatus: true
@@ -202,21 +166,12 @@ def cleanupRepositoryAfterFailure(String repositoryName, String user, String lat
 }
 
 def String getLatestGitTag (String repositoryDir) {
-    sh "echo 'Inside getLatestGitTag: ${repositoryDir}'";
+    sh "echo 'Retrieving latest git tag of: ${repositoryDir}'";
     dir(repositoryDir) {
-       /* String availableTags = sh (
-                script: "git tag",
-                returnStdout: true
-        );*/
-
         sh 'git tag > tags'
         def availableTags = readFile('tags');
 
         if (!"".equals(availableTags.trim())) {
-            /*String latestTag = sh(
-                    script: "git describe --abbrev=0",
-                    returnStdout: true
-            );*/
             sh 'git describe --abbrev=0 > latesttag'
             def latestTag = readFile('latesttag').trim();
             sh "echo 'Latest tag: ${latestTag}'";
@@ -230,21 +185,6 @@ def String getLatestGitTag (String repositoryDir) {
     }
 }
 
-/*@NonCPS
-def iterateTagMap(tagMap, String user) {
-    for (Map.Entry<String, String> entry : tagMap) {
-        cleanupRepositoryAfterFailure(entry.key, user, entry.value)
-    }
-}*/
-/*
-@NonCPS
-def mapToList(depmap) {
-    def dlist = []
-    for (entry in depmap) {
-        dlist.add([entry.key, entry.value])
-    }
-    dlist
-}*/
 
 
 
