@@ -2,13 +2,13 @@
 node {
     def tagMap = [:];
     String user = "manuri";
+    String gitCredentialsID = "manuri-pipeline-git";
     try {
         env.PATH = "${tool 'apache-maven-3.2.2'}/bin:${env.PATH}"
         env.JAVA_HOME="${tool 'Oracle-JDK-1.8.0_45'}"
         env.PATH="${env.JAVA_HOME}/bin:${env.PATH}"
 
         String settingsXMLID = "adb07180-fa9c-4bea-94c4-130813b8018c-manuri";
-        String gitCredentialsID = "manuri-pipeline-git";
         String ballerinaRepository = "ballerina-temp";
         String docerinaRepository = "docerina-temp";
         String testerinaRepository = "testerina-temp";
@@ -98,7 +98,7 @@ node {
         }*/
        // iterateTagMap(tagMap, user)
         for (it2 in mapToList(tagMap)) {
-            cleanupRepositoryAfterFailure(it2[0].toString(), user, it2[1].toString())
+            cleanupRepositoryAfterFailure(it2[0].toString(), user, it2[1].toString(), gitCredentialsID)
         }
 
     } finally {
@@ -150,7 +150,7 @@ def release(String settingsXml, String repositoryDir) {
     }
 }
 
-def cleanupRepositoryAfterFailure(String repositoryName, String user, String latestTagBeforeRelease) {
+def cleanupRepositoryAfterFailure(String repositoryName, String user, String latestTagBeforeRelease, String credentials) {
     sh "echo 'Failure has occurred in ${repositoryName} build.'";
     sh "echo 'Latest tag before release ${latestTagBeforeRelease}'";
     String latestTagAfterRelease = getLatestGitTag(repositoryName);
