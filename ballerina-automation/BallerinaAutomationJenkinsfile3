@@ -135,7 +135,7 @@ node {
         }
     } catch (Exception e){
         sh "echo 'An exception has occurred in during the build process'";
-        if (RELEASE.equals(expectedAction)) {
+        if (isRelease) {
             for (entry in tagMap) {
                 cleanupRepositoryAfterFailure(entry[0].toString(), user, entry[1].toString(), gitCredentialsID)
             }
