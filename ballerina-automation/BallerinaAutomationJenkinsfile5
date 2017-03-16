@@ -279,7 +279,8 @@ def release(String settingsXml, String repositoryDir, String releaseVersion, Str
         dir(repositoryDir) {
             //sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -B -Darguments="-Dmaven.deploy.skip=true -DskipTests=true"'
 //            sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -B -Darguments="-Dmaven.deploy.skip=true -DskipTests=true -Dtag='+ releaseTag +' -DreleaseVersion='+ releaseVersion +' -DdevelopmentVersion='+ nextDevVersion +'"';
-            sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -B -Darguments="-Dmaven.deploy.skip=true -DskipTests=true" -DreleaseVersion='+ releaseVersion + ' -Dtag=' + releaseTag + ' -DdevelopmentVersion=' + nextDevVersion;
+           // sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -B -Darguments="-Dmaven.deploy.skip=true -DskipTests=true" -DreleaseVersion='+ releaseVersion + ' -Dtag=' + releaseTag + ' -DdevelopmentVersion=' + nextDevVersion;
+            sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -B -Darguments="-Dmaven.deploy.skip=true" -DreleaseVersion='+ releaseVersion + ' -Dtag=' + releaseTag + ' -DdevelopmentVersion=' + nextDevVersion;
         }
     }
 }
@@ -287,7 +288,10 @@ def release(String settingsXml, String repositoryDir, String releaseVersion, Str
 def build(String settingsXml, String repositoryDir) {
     configFileProvider(
             [configFile(fileId: settingsXml, variable: 'MAVEN_SETTINGS')]) {
-        dir(repositoryDir) { sh 'mvn -s $MAVEN_SETTINGS clean install -DskipTests=true' }
+        dir(repositoryDir) {
+            //sh 'mvn -s $MAVEN_SETTINGS clean install -DskipTests=true'
+            sh 'mvn -s $MAVEN_SETTINGS clean install'
+        }
     }
 }
 
