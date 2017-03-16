@@ -23,7 +23,7 @@ node {
 
     def releaseParamInput;
     if (isRelease) {
-        stage 'Get Version, Tag Parameters' {
+        stage ('Get Version, Tag Parameters') {
             releaseParamInput = input(
                     id: 'userInput', message: 'Please provide following parameters', parameters: [
                     [$class: 'TextParameterDefinition', description: 'Please provide Ballerina Release Version', name: 'ballerina-release-version'],
