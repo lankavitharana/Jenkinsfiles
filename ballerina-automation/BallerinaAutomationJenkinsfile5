@@ -110,6 +110,11 @@ node {
         String propertyUpdateCommitMessage = "Updating versions of org.ballerinalang.* dependencies";
 
         cloneRepository(ballerinaParentRepository, user, gitCredentialsID);
+        dir(ballerinaParentRepository) {
+            sh (
+                    script: "git checkout tags/v0.84"
+            )
+        }
         build(settingsXMLID, ballerinaParentRepository);
 
         stage('Building ballerina') {
