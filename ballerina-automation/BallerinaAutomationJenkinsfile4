@@ -108,7 +108,7 @@ node {
         String ballerinaGroudId = "org.ballerinalang";
         String propertyUpdateCommitMessage = "Updating versions of org.ballerinalang.* dependencies";
 
-        stage('Building ballerina') {
+        /*stage('Building ballerina') {
             cloneRepository(ballerinaRepository, user, gitCredentialsID);
             if (isRelease) {
                 String ballerinaTag = getLatestGitTag(ballerinaRepository);
@@ -119,7 +119,7 @@ node {
             }
 
         }
-
+*/
         stage('Building docerina, testerina, connectors, container-support') {
             parallel composerBuild: {
                 cloneRepository(composerRepository, user, gitCredentialsID);
