@@ -325,7 +325,7 @@ def cleanupRepositoryAfterFailure(String repositoryName, String user, String lat
             }
             sh "echo 'Deleting release branch of ${repositoryName}'";
             sh(
-                    script: "git push --delete origin release",
+                    script: "git push --delete origin release-0.84",
                     returnStatus: true
             );
         }
