@@ -271,7 +271,7 @@ def release(String settingsXml, String repositoryDir, String releaseVersion, Str
         dir(repositoryDir) {
             //sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -B -Darguments="-Dmaven.deploy.skip=true -DskipTests=true"'
 //            sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -B -Darguments="-Dmaven.deploy.skip=true -DskipTests=true -Dtag='+ releaseTag +' -DreleaseVersion='+ releaseVersion +' -DdevelopmentVersion='+ nextDevVersion +'"';
-            sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -B -Darguments="-Dmaven.deploy.skip=true -DskipTests=true" -DreleaseVersion='+ releaseVersion + '-Dtag=' + releaseTag + '-DdevelopmentVersion=' + nextDevVersion;
+            sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -B -Darguments="-Dmaven.deploy.skip=true -DskipTests=true" -DreleaseVersion='+ releaseVersion + ' -Dtag=' + releaseTag + ' -DdevelopmentVersion=' + nextDevVersion;
         }
     }
 }
