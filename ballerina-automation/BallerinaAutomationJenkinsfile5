@@ -280,7 +280,12 @@ def release(String settingsXml, String repositoryDir, String releaseVersion, Str
             //sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -B -Darguments="-Dmaven.deploy.skip=true -DskipTests=true"'
 //            sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -B -Darguments="-Dmaven.deploy.skip=true -DskipTests=true -Dtag='+ releaseTag +' -DreleaseVersion='+ releaseVersion +' -DdevelopmentVersion='+ nextDevVersion +'"';
            // sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -B -Darguments="-Dmaven.deploy.skip=true -DskipTests=true" -DreleaseVersion='+ releaseVersion + ' -Dtag=' + releaseTag + ' -DdevelopmentVersion=' + nextDevVersion;
-            sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -B -Darguments="-Dmaven.deploy.skip=true" -DreleaseVersion='+ releaseVersion + ' -Dtag=' + releaseTag + ' -DdevelopmentVersion=' + nextDevVersion;
+            if ("container-support".equals(repositoryDir)) {
+                sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -B -Darguments="-Dmaven.deploy.skip=true -DskipTests=true" -DreleaseVersion=' + releaseVersion + ' -Dtag=' + releaseTag + ' -DdevelopmentVersion=' + nextDevVersion;
+            } else {
+                sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -B -Darguments="-Dmaven.deploy.skip=true" -DreleaseVersion=' + releaseVersion + ' -Dtag=' + releaseTag + ' -DdevelopmentVersion=' + nextDevVersion;
+
+            }
         }
     }
 }
@@ -290,7 +295,11 @@ def build(String settingsXml, String repositoryDir) {
             [configFile(fileId: settingsXml, variable: 'MAVEN_SETTINGS')]) {
         dir(repositoryDir) {
             //sh 'mvn -s $MAVEN_SETTINGS clean install -DskipTests=true'
-            sh 'mvn -s $MAVEN_SETTINGS clean install'
+            if ("container-support".equals(repositoryDir)) {
+                sh 'mvn -s $MAVEN_SETTINGS clean install -DskipTests=true'
+            } else {
+                sh 'mvn -s $MAVEN_SETTINGS clean install'
+            }
         }
     }
 }
