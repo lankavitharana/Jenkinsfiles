@@ -1,0 +1,341 @@
+#!groovy
+node {
+    String BUILD = "Build", RELEASE = "Release";
+    String expectedAction = BUILD;
+    stage ('Request Build Or Release') {
+        String inputParams = "Build\nRelease";
+        expectedAction = input(
+                id: 'userInput', message: 'Please choose Build Or Release option', parameters: [
+                [$class: 'ChoiceParameterDefinition', defaultValue: 'Build', choices: inputParams, description: 'Build Or Release', name: 'Choice']
+        ])
+    }
+
+    boolean isRelease = RELEASE.equals(expectedAction);
+
+    String ballerinaVersion, ballerinaReleaseTag, ballerinaDevVersion;
+    String composerVersion, composerReleaseTag, composerDevVersion;
+    String docerinaVersion, docerinaReleaseTag, docerinaDevVersion;
+    String testerinaVersion, testerinaReleaseTag, testerinaDevVersion;
+    String containerSupportVersion, containerSupportReleaseTag, containerSupportDevVersion;
+    String connectorsVersion, connectorsReleaseTag, connectorsDevVersion;
+    String toolSwaggerVersion, toolSwaggerReleaseTag, toolSwaggerDevVersion;
+    String toolsDistVersion, toolsDistReleaseTag, toolsDistDevVersion;
+
+    def releaseParamInput;
+    if (isRelease) {
+        stage 'Get Version, Tag Parameters' {
+            releaseParamInput = input(
+                    id: 'userInput', message: 'Please provide following parameters', parameters: [
+                    [$class: 'TextParameterDefinition', description: 'Please provide Ballerina Release Version', name: 'ballerina-release-version'],
+                    [$class: 'TextParameterDefinition', description: 'Please provide Ballerina Release Tag', name: 'ballerina-release-tag'],
+                    [$class: 'TextParameterDefinition', description: 'Please provide Ballerina Next Development Version', name: 'ballerina-next-development-version'],
+                    [$class: 'TextParameterDefinition', description: 'Please provide Composer Release Version', name: 'composer-release-version'],
+                    [$class: 'TextParameterDefinition', description: 'Please provide Composer Release Tag', name: 'composer-release-tag'],
+                    [$class: 'TextParameterDefinition', description: 'Please provide Composer Next Development Version', name: 'composer-next-development-version'],
+                    [$class: 'TextParameterDefinition', description: 'Please provide Docerina Release Version', name: 'docerina-release-version'],
+                    [$class: 'TextParameterDefinition', description: 'Please provide Docerina Release Tag', name: 'docerina-release-tag'],
+                    [$class: 'TextParameterDefinition', description: 'Please provide Docerina Next Development Version', name: 'docerina-next-development-version'],
+                    [$class: 'TextParameterDefinition', description: 'Please provide Testerina Release Version', name: 'testerina-release-version'],
+                    [$class: 'TextParameterDefinition', description: 'Please provide Testerina Release Tag', name: 'testerina-release-tag'],
+                    [$class: 'TextParameterDefinition', description: 'Please provide Testerina Next Development Version', name: 'testerina-next-development-version'],
+                    [$class: 'TextParameterDefinition', description: 'Please provide container-support Release Version', name: 'container-support-release-version'],
+                    [$class: 'TextParameterDefinition', description: 'Please provide container-support Release Tag', name: 'container-support-release-tag'],
+                    [$class: 'TextParameterDefinition', description: 'Please provide container-support Next Development Version', name: 'container-support-next-development-version'],
+                    [$class: 'TextParameterDefinition', description: 'Please provide connectors Release Version', name: 'connectors-release-version'],
+                    [$class: 'TextParameterDefinition', description: 'Please provide connectors Release Tag', name: 'connectors-release-tag'],
+                    [$class: 'TextParameterDefinition', description: 'Please provide connectors Next Development Version', name: 'connectors-next-development-version'],
+                    [$class: 'TextParameterDefinition', description: 'Please provide tool-swagger-ballerina Release Version', name: 'tool-swagger-release-version'],
+                    [$class: 'TextParameterDefinition', description: 'Please provide tool-swagger-ballerina Release Tag', name: 'tool-swagger-release-tag'],
+                    [$class: 'TextParameterDefinition', description: 'Please provide tool-swagger-ballerina Next Development Version', name: 'tool-swagger-next-development-version'],
+                    [$class: 'TextParameterDefinition', description: 'Please provide tools-distribution Release Version', name: 'tools-distribution-release-version'],
+                    [$class: 'TextParameterDefinition', description: 'Please provide tools-distribution Release Tag', name: 'tools-distribution-release-tag'],
+                    [$class: 'TextParameterDefinition', description: 'Please provide tools-distribution Next Development Version', name: 'tools-distribution-next-development-version'],
+            ]);
+            ballerinaVersion = releaseParamInput['ballerina-release-version'];
+            ballerinaReleaseTag = releaseParamInput['ballerina-release-tag'];
+            ballerinaDevVersion = releaseParamInput['ballerina-next-development-version'];
+
+            composerVersion = releaseParamInput['composer-release-version'];
+            composerReleaseTag = releaseParamInput['composer-release-tag'];
+            composerDevVersion = releaseParamInput['composer-next-development-version'];
+
+            docerinaVersion = releaseParamInput['docerina-release-version'];
+            docerinaReleaseTag = releaseParamInput['docerina-release-tag'];
+            docerinaDevVersion = releaseParamInput['docerina-next-development-version'];
+
+            testerinaVersion = releaseParamInput['testerina-release-version'];
+            testerinaReleaseTag = releaseParamInput['testerina-release-tag'];
+            testerinaDevVersion = releaseParamInput['testerina-next-development-version'];
+
+            containerSupportVersion = releaseParamInput['container-support-release-version'];
+            containerSupportReleaseTag = releaseParamInput['container-support-release-tag'];
+            containerSupportDevVersion = releaseParamInput['container-support-next-development-version'];
+
+            connectorsVersion = releaseParamInput['connectors-release-version'];
+            connectorsReleaseTag = releaseParamInput['connectors-release-tag'];
+            connectorsDevVersion = releaseParamInput['connectors-next-development-version'];
+
+            toolSwaggerVersion = releaseParamInput['tool-swagger-release-version'];
+            toolSwaggerReleaseTag = releaseParamInput['tool-swagger-release-tag'];
+            toolSwaggerDevVersion = releaseParamInput['tool-swagger-next-development-version'];
+
+            toolsDistVersion = releaseParamInput['tools-distribution-release-version'];
+            toolsDistReleaseTag = releaseParamInput['tools-distribution-release-tag'];
+            toolsDistDevVersion = releaseParamInput['tools-distribution-next-development-version'];
+        }
+    }
+
+
+    def tagMap = [];
+    String user = env.GIT_USER;
+    String gitCredentialsID = env.GIT_CREDENTIALS_ID;
+    try {
+        String maven = env.MAVEN_TOOL;
+        String javaHome = env.JDK;
+        env.PATH = "${tool maven}/bin:${env.PATH}"
+        env.JAVA_HOME="${tool javaHome}"
+        env.PATH="${env.JAVA_HOME}/bin:${env.PATH}"
+
+        String settingsXMLID = env.SETTINGS_XML_ID;
+        String ballerinaRepository = "ballerina-temp";
+        String composerRepository = "composer-temp";
+        String docerinaRepository = "docerina-temp";
+        String testerinaRepository = "testerina-temp";
+        String connectorsRepository = "connectors-temp";
+        String containerSupportRepository = "container-support-temp";
+        String toolsDistributionRepository = "tools-distribution-temp";
+        String toolSwaggerBallerinaRepository = "tool-swagger-ballerina-temp";
+        String ballerinaGroudId = "org.ballerinalang";
+        String propertyUpdateCommitMessage = "Updating versions of org.ballerinalang.* dependencies";
+
+        stage('Building ballerina') {
+            cloneRepository(ballerinaRepository, user, gitCredentialsID);
+            if (isRelease) {
+                String ballerinaTag = getLatestGitTag(ballerinaRepository);
+                tagMap.add([ballerinaRepository, ballerinaTag]);
+                release(settingsXMLID, ballerinaRepository, ballerinaVersion, ballerinaReleaseTag, ballerinaDevVersion);
+            } else {
+                build(settingsXMLID, ballerinaRepository);
+            }
+
+        }
+
+        stage('Building docerina, testerina, connectors, container-support') {
+            parallel composerBuild: {
+                cloneRepository(composerRepository, user, gitCredentialsID);
+                updateProperties(composerRepository, settingsXMLID, propertyUpdateCommitMessage,
+                        "${ballerinaGroudId}:*", !isRelease);
+                if (isRelease) {
+                    String composerTag = getLatestGitTag(composerRepository);
+                    tagMap.add([composerRepository, composerTag]);
+                    release(settingsXMLID, composerRepository, composerVersion, composerReleaseTag, composerDevVersion);
+                } else {
+                    build(settingsXMLID, composerRepository);
+                }
+
+
+            }, docerinaBuild: {
+                cloneRepository(docerinaRepository, user, gitCredentialsID);
+                updateProperties(docerinaRepository, settingsXMLID, propertyUpdateCommitMessage,
+                        "${ballerinaGroudId}:*", !isRelease);
+                if (isRelease) {
+                    String docerinaTag = getLatestGitTag(docerinaRepository);
+                    tagMap.add([docerinaRepository, docerinaTag]);
+                    release(settingsXMLID, docerinaRepository, docerinaVersion, docerinaReleaseTag, docerinaDevVersion);
+                } else {
+                    build(settingsXMLID, docerinaRepository);
+                }
+
+
+            }, testerinaBuild: {
+                cloneRepository(testerinaRepository, user, gitCredentialsID);
+                updateProperties(testerinaRepository, settingsXMLID, propertyUpdateCommitMessage,
+                        "${ballerinaGroudId}:*", !isRelease);
+                if (isRelease) {
+                    String testerinaTag = getLatestGitTag(testerinaRepository);
+                    tagMap.add([testerinaRepository, testerinaTag]);
+                    release(settingsXMLID, testerinaRepository, testerinaVersion, testerinaReleaseTag, testerinaDevVersion);
+                } else {
+                    build(settingsXMLID, testerinaRepository);
+                }
+
+            }, connectorsBuild: {
+                cloneRepository(connectorsRepository, user, gitCredentialsID);
+                updateProperties(connectorsRepository, settingsXMLID, propertyUpdateCommitMessage,
+                        "${ballerinaGroudId}:*", !isRelease);
+                if (isRelease) {
+                    String connectorsTag = getLatestGitTag(connectorsRepository);
+                    tagMap.add([connectorsRepository, connectorsTag]);
+                    release(settingsXMLID, connectorsRepository, connectorsVersion, connectorsReleaseTag, connectorsDevVersion);
+                } else {
+                    build(settingsXMLID, connectorsRepository);
+                }
+
+            }, containerSupportBuild: {
+                cloneRepository(containerSupportRepository, user, gitCredentialsID);
+                updateProperties(containerSupportRepository, settingsXMLID, propertyUpdateCommitMessage,
+                        "${ballerinaGroudId}:*", !isRelease);
+                if (isRelease) {
+                    String containerSupportTag = getLatestGitTag(containerSupportRepository);
+                    tagMap.add([containerSupportRepository, containerSupportTag]);
+                    release(settingsXMLID, containerSupportRepository, containerSupportVersion, containerSupportReleaseTag, containerSupportDevVersion);
+                } else {
+                    build(settingsXMLID, containerSupportRepository);
+                }
+
+            }, toolSwaggerBallerinaBuild: {
+                cloneRepository(toolSwaggerBallerinaRepository, user, gitCredentialsID);
+                updateProperties(toolSwaggerBallerinaRepository, settingsXMLID, propertyUpdateCommitMessage,
+                        "${ballerinaGroudId}:*", !isRelease);
+                if (isRelease) {
+                    String toolSwaggerTag = getLatestGitTag(toolSwaggerBallerinaRepository);
+                    tagMap.add([toolSwaggerBallerinaRepository, toolSwaggerTag]);
+                    release(settingsXMLID, toolSwaggerBallerinaRepository, toolSwaggerVersion, toolSwaggerReleaseTag, toolSwaggerDevVersion);
+                } else {
+                    build(settingsXMLID, toolSwaggerBallerinaRepository);
+                }
+
+            }, failFast: true
+        }
+
+        stage('Building tools-distribution') {
+            cloneRepository(toolsDistributionRepository, user, gitCredentialsID);
+            updateProperties(toolsDistributionRepository, settingsXMLID, propertyUpdateCommitMessage,
+                    "${ballerinaGroudId}:*", !isRelease);
+            if (isRelease) {
+                String toolsDstributionTag = getLatestGitTag(toolsDistributionRepository);
+                tagMap.add([toolsDistributionRepository, toolsDstributionTag]);
+                release(settingsXMLID, toolsDistributionRepository, toolsDistVersion, toolsDistReleaseTag, toolsDistDevVersion);
+            } else {
+                build(settingsXMLID, toolsDistributionRepository);
+            }
+
+        }
+    } catch (Exception e){
+        sh "echo 'An exception has occurred in during the build process'";
+        if (isRelease) {
+            for (entry in tagMap) {
+                cleanupRepositoryAfterFailure(entry[0].toString(), user, entry[1].toString(), gitCredentialsID)
+            }
+        }
+        throw e;
+
+    } finally {
+        stage('Clean Up') {
+            try {
+                deleteDir();
+            } catch (Exception e) {
+                sh("echo 'Unable to delete directory. Please manually delete'");
+            }
+        }
+    }
+}
+
+def cloneRepository(String repositoryName, String user, String credentials) {
+    checkout([
+            $class: 'GitSCM',
+            branches: [[name: '*/master']],
+            doGenerateSubmoduleConfigurations: false,
+            extensions: [[$class: 'LocalBranch', localBranch: 'release'],
+                         [$class: 'RelativeTargetDirectory', relativeTargetDir: repositoryName]],
+            submoduleCfg: [],
+            userRemoteConfigs:
+                    [[credentialsId: credentials,
+                      url: "http://github.com/${user}/${repositoryName}.git"]]])
+}
+
+def updateProperties(String repositoryName, String settingsXml, String commitMessage, String propertiesList, boolean allowSnapshots) {
+    configFileProvider(
+            [configFile(fileId: settingsXml, variable: 'MAVEN_SETTINGS')]) {
+        dir(repositoryName) {
+            if (!allowSnapshots) {
+                sh "mvn -s $MAVEN_SETTINGS versions:update-properties -Dincludes=${propertiesList}"
+            } else {
+                sh "mvn -s $MAVEN_SETTINGS versions:update-properties -Dincludes=${propertiesList} -DallowSnapshots=true"
+            }
+            boolean changesPresent = sh (
+                    script: "git diff-index --quiet HEAD",
+                    returnStatus: true
+            ) == 1
+            if (changesPresent) {
+                sh("git add -u")
+                sh("git commit -m '${commitMessage}'");
+            }
+        }
+    }
+}
+
+def release(String settingsXml, String repositoryDir, String releaseVersion, String releaseTag, String nextDevVersion) {
+    configFileProvider(
+            [configFile(fileId: settingsXml, variable: 'MAVEN_SETTINGS')]) {
+        dir(repositoryDir) {
+            //sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -B -Darguments="-Dmaven.deploy.skip=true -DskipTests=true"'
+            sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -B -Darguments="-Dmaven.deploy.skip=true -DskipTests=true -Dtag='+ releaseTag +' -DreleaseVersion='+ releaseVersion +' -DdevelopmentVersion='+ nextDevVersion +'"';
+        }
+    }
+}
+
+def build(String settingsXml, String repositoryDir) {
+    configFileProvider(
+            [configFile(fileId: settingsXml, variable: 'MAVEN_SETTINGS')]) {
+        dir(repositoryDir) { sh 'mvn -s $MAVEN_SETTINGS clean install -DskipTests=true' }
+    }
+}
+
+def cleanupRepositoryAfterFailure(String repositoryName, String user, String latestTagBeforeRelease, String credentials) {
+    sh "echo 'Cleaning up ${repositoryName} repository.'";
+    sh "echo 'Latest tag before release is: ${latestTagBeforeRelease}'";
+    String latestTagAfterRelease = getLatestGitTag(repositoryName);
+    sh "echo 'Latest tag after release is: ${latestTagAfterRelease}'";
+    dir(repositoryName) {
+        withCredentials(
+                [[$class          : 'UsernamePasswordMultiBinding',
+                  credentialsId   : credentials,
+                  usernameVariable: 'GIT_USERNAME',
+                  passwordVariable: 'GIT_PASSWORD']]) {
+            sh("git remote set-url origin https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${user}/${repositoryName}.git")
+            if (latestTagAfterRelease != null && !latestTagAfterRelease.equals(latestTagBeforeRelease)) {
+                sh "echo 'Deleting tag ${latestTagAfterRelease} of ${repositoryName}'";
+                sh(
+                        script: "git push --delete origin ${latestTagAfterRelease}",
+                        returnStatus: true
+                );
+            }
+            sh "echo 'Deleting release branch of ${repositoryName}'";
+            sh(
+                    script: "git push --delete origin release",
+                    returnStatus: true
+            );
+        }
+    }
+}
+
+def String getLatestGitTag (String repositoryDir) {
+    sh "echo 'Retrieving latest git tag of: ${repositoryDir}'";
+    dir(repositoryDir) {
+        sh 'git tag > tags'
+        String availableTags = readFile('tags');
+
+        if (!"".equals(availableTags.trim())) {
+            sh 'git describe --abbrev=0 > latesttag'
+            String latestTag = readFile('latesttag').trim();
+            sh "echo 'Latest tag: ${latestTag}'";
+            sh 'rm latesttag';
+            sh 'rm tags';
+            return latestTag.trim();
+        } else {
+            sh "echo 'No tags available'";
+            return null;
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
