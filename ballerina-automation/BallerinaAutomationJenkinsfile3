@@ -1,9 +1,9 @@
 #!groovy
 node {
     String BUILD = "Build", RELEASE = "Release";
-    def expectedAction = BUILD;
+    String expectedAction = BUILD;
     stage ('Request Build Or Release') {
-        def inputParams = "Build\nRelease";
+        String inputParams = "Build\nRelease";
         expectedAction = input(
                 id: 'userInput', message: 'Please choose Build Or Release option', parameters: [
                 [$class: 'ChoiceParameterDefinition', defaultValue: 'Build', choices: inputParams, description: 'Build Or Release', name: 'Choice']
@@ -13,19 +13,15 @@ node {
     boolean isRelease = RELEASE.equals(expectedAction);
 
     def tagMap = [];
-    String user = "manuri";
+    String user = env.GIT_USER;
     String gitCredentialsID = env.GIT_CREDENTIALS_ID;
-    //String gitCredentialsID = "manuri-pipeline-git";
     try {
         String maven = env.MAVEN_TOOL;
         String javaHome = env.JDK;
-       // env.PATH = "${tool 'apache-maven-3.2.2'}/bin:${env.PATH}"
         env.PATH = "${tool maven}/bin:${env.PATH}"
-        //env.JAVA_HOME="${tool 'Oracle-JDK-1.8.0_45'}"
         env.JAVA_HOME="${tool javaHome}"
         env.PATH="${env.JAVA_HOME}/bin:${env.PATH}"
 
-        //String settingsXMLID = "adb07180-fa9c-4bea-94c4-130813b8018c-manuri";
         String settingsXMLID = env.SETTINGS_XML_ID;
         String ballerinaRepository = "ballerina-temp";
         String composerRepository = "composer-temp";
@@ -241,11 +237,11 @@ def String getLatestGitTag (String repositoryDir) {
     sh "echo 'Retrieving latest git tag of: ${repositoryDir}'";
     dir(repositoryDir) {
         sh 'git tag > tags'
-        def availableTags = readFile('tags');
+        String availableTags = readFile('tags');
 
         if (!"".equals(availableTags.trim())) {
             sh 'git describe --abbrev=0 > latesttag'
-            def latestTag = readFile('latesttag').trim();
+            String latestTag = readFile('latesttag').trim();
             sh "echo 'Latest tag: ${latestTag}'";
             sh 'rm latesttag';
             sh 'rm tags';
