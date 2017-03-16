@@ -128,8 +128,22 @@ node {
             }
 
         }
+
+        stage('Building Composer') {
+            cloneRepository(composerRepository, user, gitCredentialsID);
+            updateProperties(composerRepository, settingsXMLID, propertyUpdateCommitMessage,
+                    "${ballerinaGroudId}:*", !isRelease);
+            if (isRelease) {
+                String composerTag = getLatestGitTag(composerRepository);
+                tagMap.add([composerRepository, composerTag]);
+                release(settingsXMLID, composerRepository, composerVersion, composerReleaseTag, composerDevVersion);
+            } else {
+                build(settingsXMLID, composerRepository);
+            }
+
+        }
         stage('Building docerina, testerina, connectors, container-support') {
-            parallel composerBuild: {
+            parallel /*composerBuild: {
                 cloneRepository(composerRepository, user, gitCredentialsID);
                 updateProperties(composerRepository, settingsXMLID, propertyUpdateCommitMessage,
                         "${ballerinaGroudId}:*", !isRelease);
@@ -142,7 +156,7 @@ node {
                 }
 
 
-            }, docerinaBuild: {
+            }, */docerinaBuild: {
                 cloneRepository(docerinaRepository, user, gitCredentialsID);
                 updateProperties(docerinaRepository, settingsXMLID, propertyUpdateCommitMessage,
                         "${ballerinaGroudId}:*", !isRelease);
