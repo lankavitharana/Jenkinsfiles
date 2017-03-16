@@ -105,8 +105,12 @@ node {
         String containerSupportRepository = "container-support";
         String toolsDistributionRepository = "tools-distribution";
         String toolSwaggerBallerinaRepository = "tool-swagger-ballerina";
+        String ballerinaParentRepository = "ballerina-parent";
         String ballerinaGroudId = "org.ballerinalang";
         String propertyUpdateCommitMessage = "Updating versions of org.ballerinalang.* dependencies";
+
+        cloneRepository(ballerinaParentRepository, user, gitCredentialsID);
+        build(settingsXMLID, ballerinaParentRepository);
 
         stage('Building ballerina') {
             cloneRepository(ballerinaRepository, user, gitCredentialsID);
