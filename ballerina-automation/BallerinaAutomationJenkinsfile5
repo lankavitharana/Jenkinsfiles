@@ -225,11 +225,11 @@ node {
 
     } finally {
         stage('Clean Up') {
-            try {
+            /*try {
                 deleteDir();
             } catch (Exception e) {
                 sh("echo 'Unable to delete directory. Please manually delete'");
-            }
+            }*/
         }
     }
 }
