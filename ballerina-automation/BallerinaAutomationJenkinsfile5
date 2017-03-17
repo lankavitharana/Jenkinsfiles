@@ -117,7 +117,7 @@ node {
         }
         build(settingsXMLID, ballerinaParentRepository);
 
-        stage('Building ballerina') {
+        /*stage('Building ballerina') {
             cloneRepository(ballerinaRepository, user, gitCredentialsID);
             if (isRelease) {
                 String ballerinaTag = getLatestGitTag(ballerinaRepository);
@@ -141,8 +141,8 @@ node {
                 build(settingsXMLID, composerRepository);
             }
 
-        }
-        stage('Building docerina, testerina, connectors, container-support') {
+        }*/
+        /*stage('Building docerina, testerina, connectors, container-support') {
             parallel /*composerBuild: {
                 cloneRepository(composerRepository, user, gitCredentialsID);
                 updateProperties(composerRepository, settingsXMLID, propertyUpdateCommitMessage,
@@ -156,7 +156,7 @@ node {
                 }
 
 
-            }, */docerinaBuild: {
+            }, *//*docerinaBuild: {
                 cloneRepository(docerinaRepository, user, gitCredentialsID);
                 updateProperties(docerinaRepository, settingsXMLID, propertyUpdateCommitMessage,
                         "${ballerinaGroudId}:*", !isRelease);
@@ -218,7 +218,7 @@ node {
                 }
 
             }, failFast: true
-        }
+        }*/
 
         stage('Building tools-distribution') {
             cloneRepository(toolsDistributionRepository, user, gitCredentialsID);
